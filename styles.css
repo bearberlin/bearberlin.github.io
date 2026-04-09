@@ -112,6 +112,15 @@ button {
   line-height: 1.65;
 }
 
+.thumbs-hero {
+  display: grid;
+  place-items: center;
+  min-height: 15rem;
+  font-size: clamp(6rem, 20vw, 11rem);
+  line-height: 1;
+  text-shadow: 0 18px 35px rgba(20, 32, 51, 0.14);
+}
+
 .home-actions {
   display: flex;
   gap: 0.8rem;
