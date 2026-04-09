@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Current</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css?v=20260409-1002">
+</head>
+<body>
+  <div id="loading-screen" class="loading-screen" role="status" aria-live="polite" aria-label="Loading application">
+    <div class="loading-screen__backdrop"></div>
+    <div class="loading-card">
+      <p class="loading-kicker">Preparing The Studio</p>
+      <h2>Color Current</h2>
+      <p id="loading-message" class="loading-message">Warming up brushes and balancing the canvas.</p>
+
+      <div class="loading-orbital">
+        <span class="loading-orb core"></span>
+        <span class="loading-orb satellite satellite-a"></span>
+        <span class="loading-orb satellite satellite-b"></span>
+        <span class="loading-ring ring-a"></span>
+        <span class="loading-ring ring-b"></span>
+      </div>
+
+      <div class="loading-progress" aria-hidden="true">
+        <div id="loading-progress-bar" class="loading-progress__bar"></div>
+      </div>
+
+      <div class="loading-meta">
+        <span id="loading-percent">0%</span>
+        <span id="loading-phase">Starting</span>
+      </div>
+    </div>
+  </div>
+
+  <main class="app-shell">
+    <section class="hero panel">
+      <div>
+        <p class="eyebrow">Canvas Playground</p>
+        <h1>Color Current</h1>
+        <p class="intro">
+          Sketch, erase, flood the page with a new base color, and save your work as a PNG.
+          It is light, tactile, and ready to use right away.
+        </p>
+      </div>
+      <div class="hero-chip" id="tool-indicator">Brush mode</div>
+    </section>
+
+    <section class="workspace">
+      <aside class="sidebar panel">
+        <div class="control-block">
+          <span class="section-label">Tool</span>
+          <div class="tool-grid">
+            <button id="brush-tool" class="tool-button is-active" type="button">Brush</button>
+            <button id="eraser-tool" class="tool-button" type="button">Eraser</button>
+          </div>
+        </div>
+
+        <div class="control-block">
+          <label class="section-label" for="color-picker">Color</label>
+          <div class="color-row">
+            <input id="color-picker" type="color" value="#1530ff">
+            <span id="color-value" class="value-pill">#1530FF</span>
+          </div>
+          <div class="swatch-row" aria-label="Suggested colors">
+            <button class="swatch" data-color="#1530ff" style="--swatch:#1530ff;" type="button"></button>
+            <button class="swatch" data-color="#ff5f36" style="--swatch:#ff5f36;" type="button"></button>
+            <button class="swatch" data-color="#f5c400" style="--swatch:#f5c400;" type="button"></button>
+            <button class="swatch" data-color="#171717" style="--swatch:#171717;" type="button"></button>
+            <button class="swatch" data-color="#08b981" style="--swatch:#08b981;" type="button"></button>
+          </div>
+        </div>
+
+        <div class="control-block">
+          <label class="section-label" for="brush-size">Brush Size</label>
+          <input id="brush-size" type="range" min="2" max="48" value="12">
+          <div class="range-row">
+            <span>Fine</span>
+            <strong id="brush-size-value">12 px</strong>
+            <span>Bold</span>
+          </div>
+        </div>
+
+        <div class="control-block">
+          <span class="section-label">Mirror Brush</span>
+          <div class="mirror-toggle-row">
+            <button id="toggle-mirror" class="action-button secondary is-stopped" type="button">Start Mirror</button>
+          </div>
+          <div class="mirror-grid">
+            <button id="mirror-off" class="tool-button is-active" type="button">Off</button>
+            <button id="mirror-vertical" class="tool-button" type="button">Left/Right</button>
+            <button id="mirror-horizontal" class="tool-button" type="button">Top/Bottom</button>
+            <button id="mirror-quad" class="tool-button" type="button">Quad</button>
+          </div>
+          <p id="mirror-description" class="helper-copy">Draw normally with no mirrored copies.</p>
+        </div>
+
+        <div class="control-block">
+          <label class="section-label" for="background-picker">Canvas Base</label>
+          <div class="color-row">
+            <input id="background-picker" type="color" value="#fffdf8">
+            <button id="fill-background" class="action-button secondary" type="button">Fill Canvas</button>
+          </div>
+        </div>
+
+        <div class="control-block actions">
+          <button id="clear-canvas" class="action-button danger" type="button">Clear</button>
+          <button id="save-image" class="action-button primary" type="button">Save PNG</button>
+        </div>
+
+        <div class="stats-block">
+          <div>
+            <span class="section-label">Strokes</span>
+            <strong id="stroke-count">0</strong>
+          </div>
+          <div>
+            <span class="section-label">Pointer</span>
+            <strong id="pointer-state">Idle</strong>
+          </div>
+        </div>
+      </aside>
+
+      <section class="canvas-panel panel">
+        <div class="canvas-topbar">
+          <p id="status-message" class="status-message">Press and drag to draw. Touch works too.</p>
+          <button id="reset-view" class="text-button" type="button">Reset Canvas Size</button>
+        </div>
+        <div class="canvas-frame">
+          <div class="mirror-guides" id="mirror-guides" aria-hidden="true">
+            <span class="mirror-line vertical"></span>
+            <span class="mirror-line horizontal"></span>
+          </div>
+          <canvas id="drawing-surface" width="1200" height="780" aria-label="Drawing canvas"></canvas>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="../script.js?v=20260409-1002"></script>
+</body>
+</html>
