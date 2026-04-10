@@ -16,6 +16,8 @@ const permissionLinkEl = document.getElementById("permission-link");
 const copyPermissionLinkBtn = document.getElementById("copy-permission-link");
 const cashGiftInputEl = document.getElementById("cash-gift-input");
 const giveCashBtn = document.getElementById("give-cash");
+const onlinePlayersCountEl = document.getElementById("online-players-count");
+const onlinePlayersNoteEl = document.getElementById("online-players-note");
 const adminModeLabelEl = document.getElementById("admin-mode-label");
 const adminModeButtons = document.querySelectorAll(".admin-mode-button");
 const burstConfettiBtn = document.getElementById("burst-confetti");
@@ -140,6 +142,7 @@ const loadingSteps = [
 const OWNER_STORAGE_KEY = "color-current-owner-access";
 const FRIEND_STORAGE_KEY = "color-current-friend-access";
 const GAME_STORAGE_KEY = "color-current-game-progress";
+const SESSION_STORAGE_KEY = "color-current-session-id";
 const PERMISSION_QUERY_KEY = "permission";
 const OWNER_QUERY_KEY = "bear";
 const FIREBASE_CONFIG = window.COLOR_CURRENT_FIREBASE_CONFIG || { enabled: false };
@@ -154,12 +157,16 @@ let firebaseGlobalMessageRef = null;
 let firebaseGlobalActionRef = null;
 let firebaseWatchModeRef = null;
 let firebaseWatchStrokeRef = null;
+let firebaseViewerPresenceRef = null;
+let firebaseViewersRef = null;
 let firebasePresenceReady = false;
 let firebaseReady = false;
 let firebaseAppBooted = false;
 let lastGlobalActionToken = null;
 let lastWatchStrokeToken = null;
 const surprisePalette = ["#1530ff", "#ff5f36", "#f5c400", "#08b981", "#ff7fbe", "#171717"];
+const sessionId = window.localStorage.getItem(SESSION_STORAGE_KEY) || `session-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+window.localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
 
 const randomAdminCommands = [
   { label: "Disco", run: () => applyAdminMode("disco") },
@@ -460,6 +467,17 @@ function updateWatchModeStatus(enabled) {
     : "Off for everyone right now.";
 }
 
+function updateOnlinePlayersCount(count) {
+  if (!onlinePlayersCountEl || !onlinePlayersNoteEl) {
+    return;
+  }
+
+  onlinePlayersCountEl.textContent = count === 1 ? "1 other player online" : `${count} other players online`;
+  onlinePlayersNoteEl.textContent = count > 0
+    ? "You can see other players are here."
+    : "No other players are online right now.";
+}
+
 function hasFirebaseConfig() {
   const requiredKeys = ["apiKey", "authDomain", "databaseURL", "projectId", "appId"];
   return FIREBASE_CONFIG.enabled && requiredKeys.every((key) => typeof FIREBASE_CONFIG[key] === "string" && FIREBASE_CONFIG[key].trim());
@@ -487,6 +505,8 @@ async function setupRealtimePresence() {
       firebaseGlobalActionRef = ref(firebaseDatabase, "global/action");
       firebaseWatchModeRef = ref(firebaseDatabase, "global/watchEnabled");
       firebaseWatchStrokeRef = ref(firebaseDatabase, "global/watchStroke");
+      firebaseViewersRef = ref(firebaseDatabase, "presence/viewers");
+      firebaseViewerPresenceRef = ref(firebaseDatabase, `presence/viewers/${sessionId}`);
       firebaseAppBooted = true;
     }
 
@@ -533,6 +553,12 @@ async function setupRealtimePresence() {
         }
 
         drawRemoteSegment(payload);
+      });
+
+      onValue(firebaseViewersRef, (snapshot) => {
+        const viewers = snapshot.val() || {};
+        const otherCount = Object.values(viewers).filter((viewer) => viewer && viewer.owner !== true).length;
+        updateOnlinePlayersCount(otherCount);
       });
 
       onValue(firebaseGlobalActionRef, (snapshot) => {
@@ -611,6 +637,19 @@ async function setupRealtimePresence() {
         await set(firebaseBearPresenceRef, true);
       });
     }
+
+    onValue(firebaseConnectedRef, async (snapshot) => {
+      if (snapshot.val() !== true) {
+        return;
+      }
+
+      await onDisconnect(firebaseViewerPresenceRef).remove();
+      await set(firebaseViewerPresenceRef, {
+        owner: isOwnerBrowser(),
+        online: true,
+        updatedAt: Date.now()
+      });
+    });
   } catch (error) {
     setRealtimeStatus(
       "Live status failed",
