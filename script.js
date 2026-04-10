@@ -22,6 +22,9 @@ const globalBurstBtn = document.getElementById("global-burst");
 const globalClearBtn = document.getElementById("global-clear");
 const globalShakeBtn = document.getElementById("global-shake");
 const surpriseColorBtn = document.getElementById("surprise-color");
+const darkCanvasBtn = document.getElementById("dark-canvas");
+const lightCanvasBtn = document.getElementById("light-canvas");
+const rainbowStormBtn = document.getElementById("rainbow-storm");
 const multiplayerStatusEl = document.getElementById("multiplayer-status");
 const multiplayerNoteEl = document.getElementById("multiplayer-note");
 const realtimePreviewEl = document.getElementById("realtime-preview");
@@ -313,6 +316,19 @@ async function setupRealtimePresence() {
           setTool("brush");
           statusMessageEl.textContent = "Bear changed the color for everyone.";
         }
+
+        if (payload.type === "background-fill" && typeof payload.color === "string") {
+          state.background = payload.color;
+          backgroundPicker.value = payload.color;
+          fillCanvas(payload.color);
+          statusMessageEl.textContent = "Bear changed the canvas background for everyone.";
+        }
+
+        if (payload.type === "rainbow-storm") {
+          for (let index = 0; index < 3; index += 1) {
+            window.setTimeout(spawnConfettiBurst, index * 260);
+          }
+        }
       });
 
       firebaseReady = true;
@@ -497,7 +513,7 @@ function spawnConfettiBurst() {
 }
 
 function applyAdminMode(mode, options = {}) {
-  const nextMode = ["normal", "disco", "confetti", "blackout", "rainbow", "giant", "invert", "freeze", "spotlight", "lockcolor"].includes(mode) ? mode : "normal";
+  const nextMode = ["normal", "disco", "confetti", "blackout", "rainbow", "giant", "invert", "freeze", "spotlight", "lockcolor", "mini", "neon"].includes(mode) ? mode : "normal";
   state.adminMode = nextMode;
   updateAdminModeUI();
   document.body.classList.toggle("party-disco", nextMode === "disco");
@@ -505,6 +521,7 @@ function applyAdminMode(mode, options = {}) {
   document.body.classList.toggle("party-blackout", nextMode === "blackout");
   document.body.classList.toggle("party-invert", nextMode === "invert");
   document.body.classList.toggle("party-spotlight", nextMode === "spotlight");
+  document.body.classList.toggle("party-neon", nextMode === "neon");
 
   clearConfetti();
 
@@ -520,6 +537,12 @@ function applyAdminMode(mode, options = {}) {
   if (nextMode === "giant") {
     state.brushSize = 36;
     brushSize.value = "36";
+    updateBrushLabel();
+  }
+
+  if (nextMode === "mini") {
+    state.brushSize = 4;
+    brushSize.value = "4";
     updateBrushLabel();
   }
 
@@ -1021,6 +1044,47 @@ surpriseColorBtn.addEventListener("click", () => {
   });
   statusMessageEl.textContent = "Surprise color launched.";
 });
+darkCanvasBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  const nextColor = "#101723";
+  state.background = nextColor;
+  backgroundPicker.value = nextColor;
+  fillCanvas(nextColor);
+  pushGlobalActionPayload({
+    type: "background-fill",
+    color: nextColor
+  });
+  statusMessageEl.textContent = "Dark canvas launched.";
+});
+lightCanvasBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  const nextColor = "#fffdf8";
+  state.background = nextColor;
+  backgroundPicker.value = nextColor;
+  fillCanvas(nextColor);
+  pushGlobalActionPayload({
+    type: "background-fill",
+    color: nextColor
+  });
+  statusMessageEl.textContent = "Light canvas launched.";
+});
+rainbowStormBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  for (let index = 0; index < 3; index += 1) {
+    window.setTimeout(spawnConfettiBurst, index * 260);
+  }
+  pushGlobalAction("rainbow-storm");
+  statusMessageEl.textContent = "Rainbow storm launched.";
+});
 startWatchModeBtn.addEventListener("click", () => {
   if (!state.adminUnlocked) {
     return;
@@ -1095,6 +1159,16 @@ adminModeButtons.forEach((button) => {
 
     if (button.dataset.adminMode === "lockcolor") {
       statusMessageEl.textContent = "Bear locked the colors.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "mini") {
+      statusMessageEl.textContent = "Bear mode changed to mini brush.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "neon") {
+      statusMessageEl.textContent = "Bear mode changed to neon.";
       return;
     }
 

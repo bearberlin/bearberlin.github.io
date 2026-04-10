@@ -840,6 +840,19 @@ body.party-spotlight::after {
   z-index: 2;
 }
 
+body.party-neon .panel {
+  box-shadow:
+    0 0 0 1px rgba(21, 48, 255, 0.15),
+    0 0 24px rgba(21, 48, 255, 0.2),
+    0 0 42px rgba(255, 95, 54, 0.14);
+}
+
+body.party-neon #drawing-surface {
+  box-shadow:
+    inset 0 0 0 1px rgba(20, 32, 51, 0.08),
+    0 0 26px rgba(8, 185, 129, 0.22);
+}
+
 body.screen-shake {
   animation: screen-shake 650ms ease;
 }
