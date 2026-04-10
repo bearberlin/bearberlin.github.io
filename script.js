@@ -21,6 +21,12 @@ const resetPartyBtn = document.getElementById("reset-party");
 const multiplayerStatusEl = document.getElementById("multiplayer-status");
 const multiplayerNoteEl = document.getElementById("multiplayer-note");
 const realtimePreviewEl = document.getElementById("realtime-preview");
+const globalBannerEl = document.getElementById("global-banner");
+const globalBannerTitleEl = document.getElementById("global-banner-title");
+const globalBannerTextEl = document.getElementById("global-banner-text");
+const globalMessageInputEl = document.getElementById("global-message-input");
+const sendGlobalMessageBtn = document.getElementById("send-global-message");
+const clearGlobalMessageBtn = document.getElementById("clear-global-message");
 
 const brushToolBtn = document.getElementById("brush-tool");
 const eraserToolBtn = document.getElementById("eraser-tool");
@@ -95,7 +101,11 @@ const defaultBrushSize = state.brushSize;
 let firebaseDatabase = null;
 let firebaseConnectedRef = null;
 let firebaseBearPresenceRef = null;
+let firebaseGlobalModeRef = null;
+let firebaseGlobalMessageRef = null;
 let firebasePresenceReady = false;
+let firebaseReady = false;
+let firebaseAppBooted = false;
 
 function setLoadingState(step) {
   loadingMessageEl.textContent = step.message;
@@ -137,6 +147,20 @@ function setRealtimeStatus(status, note, preview) {
   }
 }
 
+function showGlobalBanner(message) {
+  const trimmedMessage = String(message || "").trim();
+  const hasMessage = trimmedMessage.length > 0;
+  globalBannerEl.classList.toggle("is-hidden", !hasMessage);
+
+  if (!hasMessage) {
+    globalBannerTextEl.textContent = "";
+    return;
+  }
+
+  globalBannerTitleEl.textContent = "Bear Broadcast";
+  globalBannerTextEl.textContent = trimmedMessage;
+}
+
 function hasFirebaseConfig() {
   const requiredKeys = ["apiKey", "authDomain", "databaseURL", "projectId", "appId"];
   return FIREBASE_CONFIG.enabled && requiredKeys.every((key) => typeof FIREBASE_CONFIG[key] === "string" && FIREBASE_CONFIG[key].trim());
@@ -154,24 +178,42 @@ async function setupRealtimePresence() {
       import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js")
     ]);
 
-    const app = initializeApp(FIREBASE_CONFIG);
-    firebaseDatabase = getDatabase(app);
-    firebaseConnectedRef = ref(firebaseDatabase, ".info/connected");
-    firebaseBearPresenceRef = ref(firebaseDatabase, "presence/bear");
+    if (!firebaseAppBooted) {
+      const app = initializeApp(FIREBASE_CONFIG);
+      firebaseDatabase = getDatabase(app);
+      firebaseConnectedRef = ref(firebaseDatabase, ".info/connected");
+      firebaseBearPresenceRef = ref(firebaseDatabase, "presence/bear");
+      firebaseGlobalModeRef = ref(firebaseDatabase, "global/mode");
+      firebaseGlobalMessageRef = ref(firebaseDatabase, "global/message");
+      firebaseAppBooted = true;
+    }
 
-    onValue(firebaseBearPresenceRef, (snapshot) => {
-      firebasePresenceReady = true;
-      const isOnline = snapshot.val() === true;
-      setRealtimeStatus(
-        isOnline ? "Bear is online" : "Bear is offline",
-        isOnline
-          ? "Bear's browser is connected right now."
-          : "Bear's browser is not connected right now.",
-        isOnline
-          ? "Realtime status is live from Firebase."
-          : "Realtime status is live from Firebase."
-      );
-    });
+    if (!firebaseReady) {
+      onValue(firebaseBearPresenceRef, (snapshot) => {
+        firebasePresenceReady = true;
+        const isOnline = snapshot.val() === true;
+        setRealtimeStatus(
+          isOnline ? "Bear is online" : "Bear is offline",
+          isOnline
+            ? "Bear's browser is connected right now."
+            : "Bear's browser is not connected right now.",
+          "Realtime status is live from Firebase."
+        );
+      });
+
+      onValue(firebaseGlobalModeRef, (snapshot) => {
+        const nextMode = typeof snapshot.val() === "string" ? snapshot.val() : "normal";
+        applyAdminMode(nextMode, { fromRemote: true });
+      });
+
+      onValue(firebaseGlobalMessageRef, (snapshot) => {
+        const payload = snapshot.val();
+        const nextMessage = payload && typeof payload.text === "string" ? payload.text : "";
+        showGlobalBanner(nextMessage);
+      });
+
+      firebaseReady = true;
+    }
 
     if (window.localStorage.getItem(OWNER_STORAGE_KEY) === "true") {
       onValue(firebaseConnectedRef, async (snapshot) => {
@@ -190,6 +232,35 @@ async function setupRealtimePresence() {
       "Check the Firebase config and database setup before trying again."
     );
   }
+}
+
+function pushGlobalMode(mode) {
+  if (!firebaseGlobalModeRef) {
+    statusMessageEl.textContent = "Firebase is not ready yet.";
+    return;
+  }
+
+  import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js")
+    .then(({ set }) => set(firebaseGlobalModeRef, mode))
+    .catch(() => {
+      statusMessageEl.textContent = "Global mode could not update.";
+    });
+}
+
+function pushGlobalMessage(message) {
+  if (!firebaseGlobalMessageRef) {
+    statusMessageEl.textContent = "Firebase is not ready yet.";
+    return;
+  }
+
+  import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js")
+    .then(({ set }) => set(firebaseGlobalMessageRef, {
+      text: message.trim(),
+      updatedAt: Date.now()
+    }))
+    .catch(() => {
+      statusMessageEl.textContent = "Global text could not update.";
+    });
 }
 
 function runLoadingSequence() {
@@ -260,12 +331,13 @@ function spawnConfettiBurst() {
   }
 }
 
-function applyAdminMode(mode) {
-  state.adminMode = mode;
+function applyAdminMode(mode, options = {}) {
+  const nextMode = ["normal", "disco", "confetti", "blackout", "rainbow", "giant"].includes(mode) ? mode : "normal";
+  state.adminMode = nextMode;
   updateAdminModeUI();
-  document.body.classList.toggle("party-disco", mode === "disco");
-  document.body.classList.toggle("party-rainbow", mode === "rainbow");
-  document.body.classList.toggle("party-blackout", mode === "blackout");
+  document.body.classList.toggle("party-disco", nextMode === "disco");
+  document.body.classList.toggle("party-rainbow", nextMode === "rainbow");
+  document.body.classList.toggle("party-blackout", nextMode === "blackout");
 
   clearConfetti();
 
@@ -273,17 +345,20 @@ function applyAdminMode(mode) {
   brushSize.value = String(defaultBrushSize);
   updateBrushLabel();
 
-  if (mode === "confetti") {
+  if (nextMode === "confetti") {
     spawnConfettiBurst();
     confettiIntervalId = window.setInterval(spawnConfettiBurst, 1800);
   }
 
-  if (mode === "giant") {
+  if (nextMode === "giant") {
     state.brushSize = 36;
     brushSize.value = "36";
     updateBrushLabel();
   }
 
+  if (!options.fromRemote && state.adminUnlocked) {
+    pushGlobalMode(nextMode);
+  }
 }
 
 function openAdminPanel() {
@@ -300,6 +375,9 @@ function closeAdminPanel() {
 function unlockAdminAccess() {
   state.adminUnlocked = true;
   updateAdminAccessUI();
+  if (globalMessageInputEl) {
+    globalMessageInputEl.disabled = false;
+  }
 }
 
 function handleAdminShortcut(event) {
@@ -683,6 +761,26 @@ resetPartyBtn.addEventListener("click", () => {
   applyAdminMode("normal");
   statusMessageEl.textContent = "Party powers reset to normal.";
 });
+sendGlobalMessageBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  const message = globalMessageInputEl.value.trim();
+  pushGlobalMessage(message);
+  showGlobalBanner(message);
+  statusMessageEl.textContent = message ? "Global text sent." : "Global text was empty.";
+});
+clearGlobalMessageBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  globalMessageInputEl.value = "";
+  pushGlobalMessage("");
+  showGlobalBanner("");
+  statusMessageEl.textContent = "Global text cleared.";
+});
 adminModeButtons.forEach((button) => {
   button.addEventListener("click", () => {
     if (!state.adminUnlocked) {
@@ -758,6 +856,9 @@ document.addEventListener("keyup", handleAdminShortcut);
 document.addEventListener("pointerdown", focusPageForShortcuts);
 
 document.body.tabIndex = -1;
+if (globalMessageInputEl) {
+  globalMessageInputEl.disabled = !state.adminUnlocked;
+}
 updateColorLabel();
 updateBrushLabel();
 updateToolUI();

@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../styles.css?v=20260409-1210">
+  <link rel="stylesheet" href="../styles.css?v=20260409-1345">
 </head>
 <body>
   <div id="confetti-layer" class="confetti-layer" aria-hidden="true"></div>
@@ -64,6 +64,12 @@
       <p id="multiplayer-note" class="player-counter-note">Add a Firebase project later to make Bear online/offline real.</p>
     </section>
 
+    <section id="global-banner" class="global-banner panel is-hidden" aria-live="polite">
+      <span class="section-label">Global Message</span>
+      <strong id="global-banner-title">Bear Broadcast</strong>
+      <p id="global-banner-text" class="player-counter-note"></p>
+    </section>
+
     <section id="admin-panel" class="admin-panel panel is-hidden" aria-label="Creator panel">
       <div class="admin-panel__header">
         <div>
@@ -92,6 +98,15 @@
         <div class="admin-mode-grid admin-action-grid">
           <button id="burst-confetti" class="tool-button admin-action-button" type="button">Burst Confetti</button>
           <button id="reset-party" class="tool-button admin-action-button" type="button">Reset Party</button>
+        </div>
+
+        <div class="admin-share-box">
+          <label class="section-label" for="global-message-input">Global Text</label>
+          <input id="global-message-input" class="admin-link-input" type="text" maxlength="120" placeholder="Type a message for everyone">
+          <div class="admin-mode-grid admin-action-grid">
+            <button id="send-global-message" class="tool-button admin-action-button" type="button">Send Global Text</button>
+            <button id="clear-global-message" class="tool-button admin-action-button" type="button">Clear Global Text</button>
+          </div>
         </div>
 
         <div class="admin-share-box">
@@ -212,6 +227,6 @@
       measurementId: "G-JGCRDHMJQK"
     };
   </script>
-  <script src="../script.js?v=20260409-1318"></script>
+  <script src="../script.js?v=20260409-1345"></script>
 </body>
 </html>
