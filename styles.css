@@ -892,6 +892,69 @@ body.party-ice {
     linear-gradient(180deg, #f1fdff 0%, #dff7ff 50%, #cdeeff 100%);
 }
 
+body.party-forest {
+  background:
+    radial-gradient(circle at top, rgba(206, 244, 205, 0.72), transparent 24%),
+    linear-gradient(180deg, #eefbe8 0%, #dff4d7 50%, #c9ebbf 100%);
+}
+
+body.party-galaxy {
+  background:
+    radial-gradient(circle at top, rgba(197, 178, 255, 0.46), transparent 24%),
+    linear-gradient(180deg, #150f2b 0%, #2a1956 45%, #5b2c82 100%);
+}
+
+body.party-lemonade {
+  background:
+    radial-gradient(circle at top, rgba(255, 247, 174, 0.72), transparent 24%),
+    linear-gradient(180deg, #fffde4 0%, #fff9b3 50%, #ffe38a 100%);
+}
+
+body.party-storm {
+  background:
+    radial-gradient(circle at top, rgba(196, 210, 234, 0.52), transparent 24%),
+    linear-gradient(180deg, #e8edf5 0%, #b9c7dc 45%, #7d8da8 100%);
+}
+
+body.party-zebra {
+  background:
+    repeating-linear-gradient(90deg, #ffffff 0 18px, #111111 18px 36px);
+}
+
+body.party-pixel {
+  image-rendering: pixelated;
+}
+
+body.party-rose {
+  background:
+    radial-gradient(circle at top, rgba(255, 205, 224, 0.7), transparent 24%),
+    linear-gradient(180deg, #fff3f7 0%, #ffd9e7 50%, #ffc0d6 100%);
+}
+
+body.party-mint {
+  background:
+    radial-gradient(circle at top, rgba(207, 255, 235, 0.72), transparent 24%),
+    linear-gradient(180deg, #f1fff8 0%, #dfffee 50%, #c7ffe2 100%);
+}
+
+body.party-shadow {
+  background:
+    linear-gradient(180deg, #1c2030 0%, #0f1320 100%);
+}
+
+body.party-shadow .panel,
+body.party-galaxy .panel {
+  color: #f7f5ee;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.party-glow .panel {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 28px rgba(245, 196, 0, 0.18),
+    0 0 48px rgba(8, 185, 129, 0.18);
+}
+
 body.screen-shake {
   animation: screen-shake 650ms ease;
 }

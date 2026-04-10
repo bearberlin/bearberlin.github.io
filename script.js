@@ -35,6 +35,16 @@ const randomCommandBtn = document.getElementById("random-command");
 const lavaBlastBtn = document.getElementById("lava-blast");
 const iceFlashBtn = document.getElementById("ice-flash");
 const superBlackoutBtn = document.getElementById("super-blackout");
+const forestWashBtn = document.getElementById("forest-wash");
+const galaxyBurstBtn = document.getElementById("galaxy-burst");
+const lemonZingBtn = document.getElementById("lemon-zing");
+const stormSlamBtn = document.getElementById("storm-slam");
+const zebraFlipBtn = document.getElementById("zebra-flip");
+const pixelPopBtn = document.getElementById("pixel-pop");
+const roseRushBtn = document.getElementById("rose-rush");
+const mintSplashBtn = document.getElementById("mint-splash");
+const shadowDropBtn = document.getElementById("shadow-drop");
+const glowUpBtn = document.getElementById("glow-up");
 const multiplayerStatusEl = document.getElementById("multiplayer-status");
 const multiplayerNoteEl = document.getElementById("multiplayer-note");
 const realtimePreviewEl = document.getElementById("realtime-preview");
@@ -147,6 +157,16 @@ const randomAdminCommands = [
   { label: "Sunset", run: () => applyAdminMode("sunset") },
   { label: "Ocean", run: () => applyAdminMode("ocean") },
   { label: "Candy", run: () => applyAdminMode("candy") },
+  { label: "Forest", run: () => applyAdminMode("forest") },
+  { label: "Galaxy", run: () => applyAdminMode("galaxy") },
+  { label: "Lemonade", run: () => applyAdminMode("lemonade") },
+  { label: "Storm", run: () => applyAdminMode("storm") },
+  { label: "Zebra", run: () => applyAdminMode("zebra") },
+  { label: "Pixel", run: () => applyAdminMode("pixel") },
+  { label: "Rose", run: () => applyAdminMode("rose") },
+  { label: "Mint", run: () => applyAdminMode("mint") },
+  { label: "Shadow", run: () => applyAdminMode("shadow") },
+  { label: "Glow", run: () => applyAdminMode("glow") },
   {
     label: "Global Burst",
     run: () => {
@@ -619,7 +639,7 @@ function spawnConfettiBurst() {
 }
 
 function applyAdminMode(mode, options = {}) {
-  const nextMode = ["normal", "disco", "confetti", "blackout", "rainbow", "giant", "invert", "freeze", "spotlight", "lockcolor", "mini", "neon", "ghost", "sunset", "ocean", "candy", "lava", "ice"].includes(mode) ? mode : "normal";
+  const nextMode = ["normal", "disco", "confetti", "blackout", "rainbow", "giant", "invert", "freeze", "spotlight", "lockcolor", "mini", "neon", "ghost", "sunset", "ocean", "candy", "lava", "ice", "forest", "galaxy", "lemonade", "storm", "zebra", "pixel", "rose", "mint", "shadow", "glow"].includes(mode) ? mode : "normal";
   state.adminMode = nextMode;
   updateAdminModeUI();
   document.body.classList.toggle("party-disco", nextMode === "disco");
@@ -634,6 +654,16 @@ function applyAdminMode(mode, options = {}) {
   document.body.classList.toggle("party-candy", nextMode === "candy");
   document.body.classList.toggle("party-lava", nextMode === "lava");
   document.body.classList.toggle("party-ice", nextMode === "ice");
+  document.body.classList.toggle("party-forest", nextMode === "forest");
+  document.body.classList.toggle("party-galaxy", nextMode === "galaxy");
+  document.body.classList.toggle("party-lemonade", nextMode === "lemonade");
+  document.body.classList.toggle("party-storm", nextMode === "storm");
+  document.body.classList.toggle("party-zebra", nextMode === "zebra");
+  document.body.classList.toggle("party-pixel", nextMode === "pixel");
+  document.body.classList.toggle("party-rose", nextMode === "rose");
+  document.body.classList.toggle("party-mint", nextMode === "mint");
+  document.body.classList.toggle("party-shadow", nextMode === "shadow");
+  document.body.classList.toggle("party-glow", nextMode === "glow");
 
   clearConfetti();
 
@@ -1340,6 +1370,119 @@ superBlackoutBtn.addEventListener("click", () => {
   });
   statusMessageEl.textContent = "Super blackout launched.";
 });
+forestWashBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  const nextColor = "#dff4d7";
+  state.background = nextColor;
+  backgroundPicker.value = nextColor;
+  fillCanvas(nextColor);
+  pushGlobalActionPayload({ type: "background-fill", color: nextColor });
+  statusMessageEl.textContent = "Forest wash launched.";
+});
+galaxyBurstBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  applyAdminMode("galaxy");
+  for (let index = 0; index < 4; index += 1) {
+    window.setTimeout(spawnConfettiBurst, index * 180);
+  }
+  pushGlobalAction("rainbow-storm");
+  statusMessageEl.textContent = "Galaxy burst launched.";
+});
+lemonZingBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  const nextColor = "#f5f08a";
+  state.color = nextColor;
+  colorPicker.value = nextColor;
+  updateColorLabel();
+  setTool("brush");
+  pushGlobalActionPayload({ type: "surprise-color", color: nextColor });
+  statusMessageEl.textContent = "Lemon zing launched.";
+});
+stormSlamBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  applyAdminMode("storm");
+  document.body.classList.remove("screen-shake");
+  void document.body.offsetWidth;
+  document.body.classList.add("screen-shake");
+  window.setTimeout(() => {
+    document.body.classList.remove("screen-shake");
+  }, 650);
+  pushGlobalAction("shake");
+  statusMessageEl.textContent = "Storm slam launched.";
+});
+zebraFlipBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  applyAdminMode("zebra");
+  pushGlobalActionPayload({ type: "mode-set", mode: "zebra" });
+  statusMessageEl.textContent = "Zebra flip launched.";
+});
+pixelPopBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  applyAdminMode("pixel");
+  pushGlobalActionPayload({ type: "mode-set", mode: "pixel" });
+  statusMessageEl.textContent = "Pixel pop launched.";
+});
+roseRushBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  const nextColor = "#ff9ac1";
+  state.color = nextColor;
+  colorPicker.value = nextColor;
+  updateColorLabel();
+  setTool("brush");
+  pushGlobalActionPayload({ type: "surprise-color", color: nextColor });
+  statusMessageEl.textContent = "Rose rush launched.";
+});
+mintSplashBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  const nextColor = "#c7ffe2";
+  state.background = nextColor;
+  backgroundPicker.value = nextColor;
+  fillCanvas(nextColor);
+  pushGlobalActionPayload({ type: "background-fill", color: nextColor });
+  statusMessageEl.textContent = "Mint splash launched.";
+});
+shadowDropBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  applyAdminMode("shadow");
+  pushGlobalActionPayload({ type: "mode-set", mode: "shadow" });
+  statusMessageEl.textContent = "Shadow drop launched.";
+});
+glowUpBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  applyAdminMode("glow");
+  pushGlobalActionPayload({ type: "mode-set", mode: "glow" });
+  statusMessageEl.textContent = "Glow up launched.";
+});
 startWatchModeBtn.addEventListener("click", () => {
   if (!state.adminUnlocked) {
     return;
@@ -1444,6 +1587,56 @@ adminModeButtons.forEach((button) => {
 
     if (button.dataset.adminMode === "candy") {
       statusMessageEl.textContent = "Bear mode changed to candy.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "forest") {
+      statusMessageEl.textContent = "Bear mode changed to forest.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "galaxy") {
+      statusMessageEl.textContent = "Bear mode changed to galaxy.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "lemonade") {
+      statusMessageEl.textContent = "Bear mode changed to lemonade.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "storm") {
+      statusMessageEl.textContent = "Bear mode changed to storm.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "zebra") {
+      statusMessageEl.textContent = "Bear mode changed to zebra.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "pixel") {
+      statusMessageEl.textContent = "Bear mode changed to pixel.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "rose") {
+      statusMessageEl.textContent = "Bear mode changed to rose.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "mint") {
+      statusMessageEl.textContent = "Bear mode changed to mint.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "shadow") {
+      statusMessageEl.textContent = "Bear mode changed to shadow.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "glow") {
+      statusMessageEl.textContent = "Bear mode changed to glow.";
       return;
     }
 
