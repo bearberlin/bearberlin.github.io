@@ -58,13 +58,7 @@ const state = {
   background: backgroundPicker.value,
   isDrawing: false,
   lastPoint: null,
-  strokeCount: 0,
-  multiplayer: {
-    bearOnline: false,
-    liveViewers: 0,
-    sharedMode: "normal",
-    lastSharedStroke: null
-  }
+  strokeCount: 0
 };
 
 const loadingSteps = [
@@ -94,9 +88,14 @@ const OWNER_STORAGE_KEY = "color-current-owner-access";
 const FRIEND_STORAGE_KEY = "color-current-friend-access";
 const PERMISSION_QUERY_KEY = "permission";
 const OWNER_QUERY_KEY = "bear";
+const FIREBASE_CONFIG = window.COLOR_CURRENT_FIREBASE_CONFIG || { enabled: false };
 
 let confettiIntervalId = null;
 const defaultBrushSize = state.brushSize;
+let firebaseDatabase = null;
+let firebaseConnectedRef = null;
+let firebaseBearPresenceRef = null;
+let firebasePresenceReady = false;
 
 function setLoadingState(step) {
   loadingMessageEl.textContent = step.message;
@@ -110,23 +109,87 @@ function updateMultiplayerPreview() {
     return;
   }
 
-  multiplayerStatusEl.textContent = state.multiplayer.bearOnline ? "Bear is online" : "Bear is offline";
-  multiplayerNoteEl.textContent = state.multiplayer.bearOnline
-    ? "A future backend could let everyone watch Bear draw live right now."
-    : "This site is ready for live online status, shared powers, and live drawing later.";
+  if (!FIREBASE_CONFIG.enabled) {
+    multiplayerStatusEl.textContent = "Live status not connected";
+    multiplayerNoteEl.textContent = "Add a Firebase project later to make Bear online/offline real.";
+    realtimePreviewEl.textContent = "Firebase is not connected yet. When it is, this panel can show real Bear online/offline status.";
+    return;
+  }
 
-  realtimePreviewEl.textContent = state.multiplayer.bearOnline
-    ? `Future realtime state: ${state.multiplayer.liveViewers} viewers, shared mode ${state.multiplayer.sharedMode}.`
-    : "Waiting for a real backend. Later this can show Bear online, viewer count, and live drawing sync.";
+  if (!firebasePresenceReady) {
+    multiplayerStatusEl.textContent = "Connecting live status...";
+    multiplayerNoteEl.textContent = "Trying to reach the realtime server.";
+    realtimePreviewEl.textContent = "Firebase is turned on, and the app is waiting for the live connection.";
+  }
 }
 
-function syncFutureRealtimeState(patch) {
-  state.multiplayer = {
-    ...state.multiplayer,
-    ...patch
-  };
+function setRealtimeStatus(status, note, preview) {
+  if (multiplayerStatusEl) {
+    multiplayerStatusEl.textContent = status;
+  }
 
-  updateMultiplayerPreview();
+  if (multiplayerNoteEl) {
+    multiplayerNoteEl.textContent = note;
+  }
+
+  if (realtimePreviewEl) {
+    realtimePreviewEl.textContent = preview;
+  }
+}
+
+function hasFirebaseConfig() {
+  const requiredKeys = ["apiKey", "authDomain", "databaseURL", "projectId", "appId"];
+  return FIREBASE_CONFIG.enabled && requiredKeys.every((key) => typeof FIREBASE_CONFIG[key] === "string" && FIREBASE_CONFIG[key].trim());
+}
+
+async function setupRealtimePresence() {
+  if (!hasFirebaseConfig()) {
+    updateMultiplayerPreview();
+    return;
+  }
+
+  try {
+    const [{ initializeApp }, { getDatabase, ref, onValue, onDisconnect, set }] = await Promise.all([
+      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js")
+    ]);
+
+    const app = initializeApp(FIREBASE_CONFIG);
+    firebaseDatabase = getDatabase(app);
+    firebaseConnectedRef = ref(firebaseDatabase, ".info/connected");
+    firebaseBearPresenceRef = ref(firebaseDatabase, "presence/bear");
+
+    onValue(firebaseBearPresenceRef, (snapshot) => {
+      firebasePresenceReady = true;
+      const isOnline = snapshot.val() === true;
+      setRealtimeStatus(
+        isOnline ? "Bear is online" : "Bear is offline",
+        isOnline
+          ? "Bear's browser is connected right now."
+          : "Bear's browser is not connected right now.",
+        isOnline
+          ? "Realtime status is live from Firebase."
+          : "Realtime status is live from Firebase."
+      );
+    });
+
+    if (window.localStorage.getItem(OWNER_STORAGE_KEY) === "true") {
+      onValue(firebaseConnectedRef, async (snapshot) => {
+        if (snapshot.val() !== true) {
+          return;
+        }
+
+        await onDisconnect(firebaseBearPresenceRef).set(false);
+        await set(firebaseBearPresenceRef, true);
+      });
+    }
+  } catch (error) {
+    setRealtimeStatus(
+      "Live status failed",
+      "Firebase could not connect from this page.",
+      "Check the Firebase config and database setup before trying again."
+    );
+  }
 }
 
 function runLoadingSequence() {
@@ -221,9 +284,6 @@ function applyAdminMode(mode) {
     updateBrushLabel();
   }
 
-  syncFutureRealtimeState({
-    sharedMode: mode
-  });
 }
 
 function openAdminPanel() {
@@ -603,10 +663,8 @@ closeAdminBtn.addEventListener("click", closeAdminPanel);
 claimOwnerAccessBtn.addEventListener("click", () => {
   window.localStorage.setItem(OWNER_STORAGE_KEY, "true");
   unlockAdminAccess();
-  syncFutureRealtimeState({
-    bearOnline: true
-  });
   statusMessageEl.textContent = "Bear controls unlocked on this browser.";
+  setupRealtimePresence();
 });
 copyPermissionLinkBtn.addEventListener("click", copyPermissionLink);
 burstConfettiBtn.addEventListener("click", () => {
@@ -709,3 +767,4 @@ updateAdminModeUI();
 updateMultiplayerPreview();
 resizeCanvas();
 runLoadingSequence();
+setupRealtimePresence();
