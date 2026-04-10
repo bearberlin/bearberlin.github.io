@@ -853,6 +853,21 @@ body.party-neon #drawing-surface {
     0 0 26px rgba(8, 185, 129, 0.22);
 }
 
+body.party-ghost .panel {
+  opacity: 0.86;
+  backdrop-filter: blur(24px);
+}
+
+body.party-ghost #drawing-surface {
+  opacity: 0.9;
+}
+
+body.party-sunset {
+  background:
+    radial-gradient(circle at top, rgba(255, 214, 153, 0.6), transparent 24%),
+    linear-gradient(180deg, #fff4da 0%, #ffd7d0 50%, #f8d3ff 100%);
+}
+
 body.screen-shake {
   animation: screen-shake 650ms ease;
 }

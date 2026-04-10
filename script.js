@@ -25,6 +25,9 @@ const surpriseColorBtn = document.getElementById("surprise-color");
 const darkCanvasBtn = document.getElementById("dark-canvas");
 const lightCanvasBtn = document.getElementById("light-canvas");
 const rainbowStormBtn = document.getElementById("rainbow-storm");
+const goldRushBtn = document.getElementById("gold-rush");
+const nightPartyBtn = document.getElementById("night-party");
+const flipColorsBtn = document.getElementById("flip-colors");
 const multiplayerStatusEl = document.getElementById("multiplayer-status");
 const multiplayerNoteEl = document.getElementById("multiplayer-note");
 const realtimePreviewEl = document.getElementById("realtime-preview");
@@ -329,6 +332,10 @@ async function setupRealtimePresence() {
             window.setTimeout(spawnConfettiBurst, index * 260);
           }
         }
+
+        if (payload.type === "mode-set" && typeof payload.mode === "string") {
+          applyAdminMode(payload.mode, { fromRemote: true });
+        }
       });
 
       firebaseReady = true;
@@ -513,7 +520,7 @@ function spawnConfettiBurst() {
 }
 
 function applyAdminMode(mode, options = {}) {
-  const nextMode = ["normal", "disco", "confetti", "blackout", "rainbow", "giant", "invert", "freeze", "spotlight", "lockcolor", "mini", "neon"].includes(mode) ? mode : "normal";
+  const nextMode = ["normal", "disco", "confetti", "blackout", "rainbow", "giant", "invert", "freeze", "spotlight", "lockcolor", "mini", "neon", "ghost", "sunset"].includes(mode) ? mode : "normal";
   state.adminMode = nextMode;
   updateAdminModeUI();
   document.body.classList.toggle("party-disco", nextMode === "disco");
@@ -522,6 +529,8 @@ function applyAdminMode(mode, options = {}) {
   document.body.classList.toggle("party-invert", nextMode === "invert");
   document.body.classList.toggle("party-spotlight", nextMode === "spotlight");
   document.body.classList.toggle("party-neon", nextMode === "neon");
+  document.body.classList.toggle("party-ghost", nextMode === "ghost");
+  document.body.classList.toggle("party-sunset", nextMode === "sunset");
 
   clearConfetti();
 
@@ -1085,6 +1094,46 @@ rainbowStormBtn.addEventListener("click", () => {
   pushGlobalAction("rainbow-storm");
   statusMessageEl.textContent = "Rainbow storm launched.";
 });
+goldRushBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  const nextColor = "#f5c400";
+  state.color = nextColor;
+  colorPicker.value = nextColor;
+  updateColorLabel();
+  setTool("brush");
+  pushGlobalActionPayload({
+    type: "surprise-color",
+    color: nextColor
+  });
+  statusMessageEl.textContent = "Gold rush launched.";
+});
+nightPartyBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  applyAdminMode("blackout");
+  pushGlobalActionPayload({
+    type: "background-fill",
+    color: "#101723"
+  });
+  statusMessageEl.textContent = "Night party launched.";
+});
+flipColorsBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  applyAdminMode("invert");
+  pushGlobalActionPayload({
+    type: "mode-set",
+    mode: "invert"
+  });
+  statusMessageEl.textContent = "Flip colors launched.";
+});
 startWatchModeBtn.addEventListener("click", () => {
   if (!state.adminUnlocked) {
     return;
@@ -1169,6 +1218,16 @@ adminModeButtons.forEach((button) => {
 
     if (button.dataset.adminMode === "neon") {
       statusMessageEl.textContent = "Bear mode changed to neon.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "ghost") {
+      statusMessageEl.textContent = "Bear mode changed to ghost.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "sunset") {
+      statusMessageEl.textContent = "Bear mode changed to sunset.";
       return;
     }
 
