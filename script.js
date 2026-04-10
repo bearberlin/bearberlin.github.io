@@ -5,8 +5,6 @@ const loadingMessageEl = document.getElementById("loading-message");
 const loadingProgressBarEl = document.getElementById("loading-progress-bar");
 const loadingPercentEl = document.getElementById("loading-percent");
 const loadingPhaseEl = document.getElementById("loading-phase");
-const playerCountEl = document.getElementById("player-count");
-const playerCounterNoteEl = document.getElementById("player-counter-note");
 
 const brushToolBtn = document.getElementById("brush-tool");
 const eraserToolBtn = document.getElementById("eraser-tool");
@@ -66,28 +64,6 @@ const loadingSteps = [
     message: "Studio loaded. Time to make something."
   }
 ];
-
-async function updatePlayerCount() {
-  if (!playerCountEl || typeof Counter === "undefined") {
-    return;
-  }
-
-  try {
-    const counter = new Counter({ workspace: "bearberlin-site" });
-    const result = await counter.up("color-current-players");
-    playerCountEl.textContent = String(result.data.up_count);
-
-    if (playerCounterNoteEl) {
-      playerCounterNoteEl.textContent = "Counting everyone who opens the drawing app.";
-    }
-  } catch (error) {
-    playerCountEl.textContent = "?";
-
-    if (playerCounterNoteEl) {
-      playerCounterNoteEl.textContent = "Counter could not load right now.";
-    }
-  }
-}
 
 function setLoadingState(step) {
   loadingMessageEl.textContent = step.message;
@@ -465,4 +441,3 @@ updateToolUI();
 updateMirrorUI();
 resizeCanvas();
 runLoadingSequence();
-updatePlayerCount();
