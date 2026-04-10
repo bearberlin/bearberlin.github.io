@@ -14,8 +14,6 @@ const claimOwnerAccessBtn = document.getElementById("claim-owner-access");
 const closeAdminBtn = document.getElementById("close-admin");
 const permissionLinkEl = document.getElementById("permission-link");
 const copyPermissionLinkBtn = document.getElementById("copy-permission-link");
-const cashGiftInputEl = document.getElementById("cash-gift-input");
-const giveCashBtn = document.getElementById("give-cash");
 const onlinePlayersCountEl = document.getElementById("online-players-count");
 const onlinePlayersNoteEl = document.getElementById("online-players-note");
 const adminModeLabelEl = document.getElementById("admin-mode-label");
@@ -89,13 +87,6 @@ const pointerStateEl = document.getElementById("pointer-state");
 const statusMessageEl = document.getElementById("status-message");
 const toolIndicatorEl = document.getElementById("tool-indicator");
 const swatches = document.querySelectorAll(".swatch");
-const freeDrawModeBtn = document.getElementById("mode-free-draw");
-const submitDrawModeBtn = document.getElementById("mode-submit-draw");
-const cashTotalEl = document.getElementById("cash-total");
-const gadgetCountEl = document.getElementById("gadget-count");
-const submitDrawingBtn = document.getElementById("submit-drawing");
-const gameNoteEl = document.getElementById("game-note");
-const shopItems = document.querySelectorAll(".shop-item");
 
 const state = {
   tool: "brush",
@@ -104,9 +95,6 @@ const state = {
   adminOpen: false,
   adminUnlocked: false,
   adminMode: "normal",
-  gameMode: "free",
-  cash: 0,
-  ownedGadgets: [],
   color: colorPicker.value,
   brushSize: Number(brushSize.value),
   background: backgroundPicker.value,
@@ -141,7 +129,6 @@ const loadingSteps = [
 
 const OWNER_STORAGE_KEY = "color-current-owner-access";
 const FRIEND_STORAGE_KEY = "color-current-friend-access";
-const GAME_STORAGE_KEY = "color-current-game-progress";
 const SESSION_STORAGE_KEY = "color-current-session-id";
 const PERMISSION_QUERY_KEY = "permission";
 const OWNER_QUERY_KEY = "bear";
@@ -328,123 +315,6 @@ function showGlobalBanner(message) {
   gameTextValueEl.textContent = trimmedMessage;
 }
 
-function saveGameProgress() {
-  window.localStorage.setItem(GAME_STORAGE_KEY, JSON.stringify({
-    gameMode: state.gameMode,
-    cash: state.cash,
-    ownedGadgets: state.ownedGadgets
-  }));
-}
-
-function loadGameProgress() {
-  try {
-    const raw = window.localStorage.getItem(GAME_STORAGE_KEY);
-    if (!raw) {
-      return;
-    }
-
-    const parsed = JSON.parse(raw);
-    state.gameMode = parsed.gameMode === "submit" ? "submit" : "free";
-    state.cash = Number(parsed.cash) || 0;
-    state.ownedGadgets = Array.isArray(parsed.ownedGadgets) ? parsed.ownedGadgets : [];
-  } catch (error) {
-    // Ignore broken saved game data and start fresh.
-  }
-}
-
-function hasGadget(gadgetId) {
-  return state.ownedGadgets.includes(gadgetId);
-}
-
-function updateGameUI() {
-  freeDrawModeBtn.classList.toggle("is-active", state.gameMode === "free");
-  submitDrawModeBtn.classList.toggle("is-active", state.gameMode === "submit");
-  cashTotalEl.textContent = `$${state.cash}`;
-  gadgetCountEl.textContent = String(state.ownedGadgets.length);
-  submitDrawingBtn.disabled = state.gameMode !== "submit";
-  gameNoteEl.textContent = state.gameMode === "submit"
-    ? "Submit Mode lets you turn strokes into cash."
-    : "Free Draw lets you sketch for fun. Switch to Submit Mode when you want rewards.";
-
-  shopItems.forEach((item) => {
-    const gadgetId = item.dataset.gadgetId;
-    item.classList.toggle("is-active", hasGadget(gadgetId));
-    item.disabled = hasGadget(gadgetId);
-  });
-}
-
-function setGameMode(mode) {
-  state.gameMode = mode === "submit" ? "submit" : "free";
-  updateGameUI();
-  saveGameProgress();
-  statusMessageEl.textContent = state.gameMode === "submit"
-    ? "Submit Mode is on."
-    : "Free Draw mode is on.";
-}
-
-function calculateSubmissionReward() {
-  let reward = 12 + Math.min(state.strokeCount, 40);
-
-  if (hasGadget("double_payout")) {
-    reward *= 2;
-  }
-
-  if (hasGadget("lucky_star")) {
-    reward += 12;
-  }
-
-  if (hasGadget("speed_wheels")) {
-    reward += 6;
-  }
-
-  if (hasGadget("shiny_frame")) {
-    reward += 9;
-  }
-
-  return reward;
-}
-
-function submitDrawingForCash() {
-  if (state.gameMode !== "submit") {
-    statusMessageEl.textContent = "Switch to Submit Mode first.";
-    return;
-  }
-
-  if (state.strokeCount < 1) {
-    statusMessageEl.textContent = "Draw something first.";
-    return;
-  }
-
-  const reward = calculateSubmissionReward();
-  state.cash += reward;
-  state.strokeCount = 0;
-  updateStats("Idle");
-  updateGameUI();
-  saveGameProgress();
-  statusMessageEl.textContent = `Drawing submitted for $${reward}.`;
-}
-
-function buyGadget(button) {
-  const gadgetId = button.dataset.gadgetId;
-  const price = Number(button.dataset.price) || 0;
-
-  if (hasGadget(gadgetId)) {
-    statusMessageEl.textContent = "You already bought that gadget.";
-    return;
-  }
-
-  if (state.cash < price) {
-    statusMessageEl.textContent = "Not enough cash yet.";
-    return;
-  }
-
-  state.cash -= price;
-  state.ownedGadgets.push(gadgetId);
-  updateGameUI();
-  saveGameProgress();
-  statusMessageEl.textContent = "Gadget bought.";
-}
-
 function isDrawingFrozen() {
   return state.adminMode === "freeze";
 }
@@ -601,16 +471,6 @@ async function setupRealtimePresence() {
           backgroundPicker.value = payload.color;
           fillCanvas(payload.color);
           statusMessageEl.textContent = "Bear changed the canvas background for everyone.";
-        }
-
-        if (payload.type === "cash-gift") {
-          const amount = Number(payload.amount) || 0;
-          if (amount > 0) {
-            state.cash += amount;
-            updateGameUI();
-            saveGameProgress();
-            statusMessageEl.textContent = `Bear gave you $${amount}.`;
-          }
         }
 
         if (payload.type === "rainbow-storm") {
@@ -1381,8 +1241,6 @@ if (ownerAccess || friendAccess || hasPermissionLink || hasOwnerLink) {
   state.adminUnlocked = true;
 }
 
-loadGameProgress();
-
 brushToolBtn.addEventListener("click", () => setTool("brush"));
 eraserToolBtn.addEventListener("click", () => setTool("eraser"));
 mirrorOffBtn.addEventListener("click", () => setMirrorMode("off"));
@@ -1399,18 +1257,6 @@ claimOwnerAccessBtn.addEventListener("click", () => {
   setupRealtimePresence();
 });
 copyPermissionLinkBtn.addEventListener("click", copyPermissionLink);
-giveCashBtn.addEventListener("click", () => {
-  if (!state.adminUnlocked) {
-    return;
-  }
-
-  const amount = Math.max(1, Math.min(500, Number(cashGiftInputEl.value) || 0));
-  pushGlobalActionPayload({
-    type: "cash-gift",
-    amount
-  });
-  statusMessageEl.textContent = `Bear gave players $${amount}.`;
-});
 burstConfettiBtn.addEventListener("click", () => {
   if (!state.adminUnlocked) {
     return;
@@ -1781,12 +1627,6 @@ drawMotorcycleBtn.addEventListener("click", () => {
   drawMotorcycleArt();
   statusMessageEl.textContent = "Motorcycle drawn.";
 });
-freeDrawModeBtn.addEventListener("click", () => setGameMode("free"));
-submitDrawModeBtn.addEventListener("click", () => setGameMode("submit"));
-submitDrawingBtn.addEventListener("click", submitDrawingForCash);
-shopItems.forEach((item) => {
-  item.addEventListener("click", () => buyGadget(item));
-});
 startWatchModeBtn.addEventListener("click", () => {
   if (!state.adminUnlocked) {
     return;
@@ -2021,7 +1861,6 @@ document.body.tabIndex = -1;
 if (globalMessageInputEl) {
   globalMessageInputEl.disabled = !state.adminUnlocked;
 }
-updateGameUI();
 updateColorLabel();
 updateBrushLabel();
 updateToolUI();
