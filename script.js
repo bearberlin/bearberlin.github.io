@@ -9,6 +9,7 @@ const confettiLayerEl = document.getElementById("confetti-layer");
 const adminPanelEl = document.getElementById("admin-panel");
 const adminLockedEl = document.getElementById("admin-locked");
 const adminControlsEl = document.getElementById("admin-controls");
+const openAdminBtn = document.getElementById("open-admin");
 const claimOwnerAccessBtn = document.getElementById("claim-owner-access");
 const closeAdminBtn = document.getElementById("close-admin");
 const permissionLinkEl = document.getElementById("permission-link");
@@ -520,6 +521,7 @@ mirrorVerticalBtn.addEventListener("click", () => setMirrorMode("vertical"));
 mirrorHorizontalBtn.addEventListener("click", () => setMirrorMode("horizontal"));
 mirrorQuadBtn.addEventListener("click", () => setMirrorMode("quad"));
 toggleMirrorBtn.addEventListener("click", toggleMirror);
+openAdminBtn.addEventListener("click", openAdminPanel);
 closeAdminBtn.addEventListener("click", closeAdminPanel);
 claimOwnerAccessBtn.addEventListener("click", () => {
   window.localStorage.setItem(OWNER_STORAGE_KEY, "true");

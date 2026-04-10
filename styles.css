@@ -130,6 +130,10 @@ button {
   line-height: 1.45;
 }
 
+.player-counter-button {
+  margin-top: 0.9rem;
+}
+
 .admin-panel {
   margin-bottom: 1rem;
   padding: 1rem 1.15rem;
