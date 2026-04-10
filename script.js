@@ -45,6 +45,7 @@ const roseRushBtn = document.getElementById("rose-rush");
 const mintSplashBtn = document.getElementById("mint-splash");
 const shadowDropBtn = document.getElementById("shadow-drop");
 const glowUpBtn = document.getElementById("glow-up");
+const drawMotorcycleBtn = document.getElementById("draw-motorcycle");
 const multiplayerStatusEl = document.getElementById("multiplayer-status");
 const multiplayerNoteEl = document.getElementById("multiplayer-note");
 const realtimePreviewEl = document.getElementById("realtime-preview");
@@ -853,6 +854,102 @@ function fillCanvas(color) {
   context.restore();
 }
 
+function drawMotorcycleArt() {
+  const baseWidth = canvas.width;
+  const baseHeight = canvas.height;
+  const scale = Math.min(baseWidth / 1200, baseHeight / 780);
+  const wheelY = baseHeight * 0.72;
+  const rearX = baseWidth * 0.3;
+  const frontX = baseWidth * 0.68;
+  const wheelRadius = 62 * scale;
+
+  context.save();
+  context.globalCompositeOperation = "source-over";
+  context.lineCap = "round";
+  context.lineJoin = "round";
+
+  context.strokeStyle = "#101723";
+  context.fillStyle = "#ff5f36";
+  context.lineWidth = 10 * scale;
+
+  // Wheels
+  context.beginPath();
+  context.arc(rearX, wheelY, wheelRadius, 0, Math.PI * 2);
+  context.arc(frontX, wheelY, wheelRadius, 0, Math.PI * 2);
+  context.fillStyle = "#171717";
+  context.fill();
+
+  context.beginPath();
+  context.arc(rearX, wheelY, wheelRadius * 0.45, 0, Math.PI * 2);
+  context.arc(frontX, wheelY, wheelRadius * 0.45, 0, Math.PI * 2);
+  context.fillStyle = "#f4f0e6";
+  context.fill();
+
+  // Frame
+  context.beginPath();
+  context.moveTo(rearX, wheelY);
+  context.lineTo(baseWidth * 0.43, baseHeight * 0.5);
+  context.lineTo(baseWidth * 0.57, baseHeight * 0.5);
+  context.lineTo(frontX, wheelY);
+  context.lineTo(baseWidth * 0.48, baseHeight * 0.6);
+  context.closePath();
+  context.stroke();
+
+  // Seat
+  context.beginPath();
+  context.moveTo(baseWidth * 0.41, baseHeight * 0.46);
+  context.lineTo(baseWidth * 0.53, baseHeight * 0.46);
+  context.lineTo(baseWidth * 0.56, baseHeight * 0.49);
+  context.lineTo(baseWidth * 0.43, baseHeight * 0.49);
+  context.closePath();
+  context.fillStyle = "#101723";
+  context.fill();
+
+  // Tank
+  context.beginPath();
+  context.moveTo(baseWidth * 0.5, baseHeight * 0.43);
+  context.quadraticCurveTo(baseWidth * 0.58, baseHeight * 0.4, baseWidth * 0.6, baseHeight * 0.48);
+  context.lineTo(baseWidth * 0.53, baseHeight * 0.51);
+  context.quadraticCurveTo(baseWidth * 0.47, baseHeight * 0.49, baseWidth * 0.5, baseHeight * 0.43);
+  context.fillStyle = "#ff5f36";
+  context.fill();
+  context.stroke();
+
+  // Front fork and bars
+  context.beginPath();
+  context.moveTo(frontX, wheelY);
+  context.lineTo(baseWidth * 0.61, baseHeight * 0.47);
+  context.lineTo(baseWidth * 0.67, baseHeight * 0.39);
+  context.moveTo(baseWidth * 0.67, baseHeight * 0.39);
+  context.lineTo(baseWidth * 0.73, baseHeight * 0.37);
+  context.stroke();
+
+  // Rear frame and exhaust
+  context.beginPath();
+  context.moveTo(baseWidth * 0.43, baseHeight * 0.5);
+  context.lineTo(baseWidth * 0.36, baseHeight * 0.42);
+  context.moveTo(baseWidth * 0.38, baseHeight * 0.6);
+  context.lineTo(baseWidth * 0.56, baseHeight * 0.63);
+  context.stroke();
+
+  // Headlight
+  context.beginPath();
+  context.arc(baseWidth * 0.655, baseHeight * 0.425, 14 * scale, 0, Math.PI * 2);
+  context.fillStyle = "#f5c400";
+  context.fill();
+  context.stroke();
+
+  // Ground line
+  context.beginPath();
+  context.moveTo(baseWidth * 0.18, wheelY + wheelRadius + 18 * scale);
+  context.lineTo(baseWidth * 0.82, wheelY + wheelRadius + 18 * scale);
+  context.strokeStyle = "rgba(20, 32, 51, 0.25)";
+  context.lineWidth = 6 * scale;
+  context.stroke();
+
+  context.restore();
+}
+
 function resetCanvas() {
   fillCanvas(state.background);
   updateStats("Idle");
@@ -1482,6 +1579,14 @@ glowUpBtn.addEventListener("click", () => {
   applyAdminMode("glow");
   pushGlobalActionPayload({ type: "mode-set", mode: "glow" });
   statusMessageEl.textContent = "Glow up launched.";
+});
+drawMotorcycleBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  drawMotorcycleArt();
+  statusMessageEl.textContent = "Motorcycle drawn.";
 });
 startWatchModeBtn.addEventListener("click", () => {
   if (!state.adminUnlocked) {
