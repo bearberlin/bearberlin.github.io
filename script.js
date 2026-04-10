@@ -32,6 +32,9 @@ const oceanWashBtn = document.getElementById("ocean-wash");
 const pinkPopBtn = document.getElementById("pink-pop");
 const megaPartyBtn = document.getElementById("mega-party");
 const randomCommandBtn = document.getElementById("random-command");
+const lavaBlastBtn = document.getElementById("lava-blast");
+const iceFlashBtn = document.getElementById("ice-flash");
+const superBlackoutBtn = document.getElementById("super-blackout");
 const multiplayerStatusEl = document.getElementById("multiplayer-status");
 const multiplayerNoteEl = document.getElementById("multiplayer-note");
 const realtimePreviewEl = document.getElementById("realtime-preview");
@@ -616,7 +619,7 @@ function spawnConfettiBurst() {
 }
 
 function applyAdminMode(mode, options = {}) {
-  const nextMode = ["normal", "disco", "confetti", "blackout", "rainbow", "giant", "invert", "freeze", "spotlight", "lockcolor", "mini", "neon", "ghost", "sunset", "ocean", "candy"].includes(mode) ? mode : "normal";
+  const nextMode = ["normal", "disco", "confetti", "blackout", "rainbow", "giant", "invert", "freeze", "spotlight", "lockcolor", "mini", "neon", "ghost", "sunset", "ocean", "candy", "lava", "ice"].includes(mode) ? mode : "normal";
   state.adminMode = nextMode;
   updateAdminModeUI();
   document.body.classList.toggle("party-disco", nextMode === "disco");
@@ -629,6 +632,8 @@ function applyAdminMode(mode, options = {}) {
   document.body.classList.toggle("party-sunset", nextMode === "sunset");
   document.body.classList.toggle("party-ocean", nextMode === "ocean");
   document.body.classList.toggle("party-candy", nextMode === "candy");
+  document.body.classList.toggle("party-lava", nextMode === "lava");
+  document.body.classList.toggle("party-ice", nextMode === "ice");
 
   clearConfetti();
 
@@ -1283,6 +1288,57 @@ randomCommandBtn.addEventListener("click", () => {
   const nextCommand = randomAdminCommands[Math.floor(Math.random() * randomAdminCommands.length)];
   nextCommand.run();
   statusMessageEl.textContent = `Random command chose ${nextCommand.label}.`;
+});
+lavaBlastBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  applyAdminMode("lava");
+  const nextColor = "#ff5f36";
+  state.background = nextColor;
+  backgroundPicker.value = nextColor;
+  fillCanvas(nextColor);
+  pushGlobalActionPayload({
+    type: "background-fill",
+    color: nextColor
+  });
+  statusMessageEl.textContent = "Lava blast launched.";
+});
+iceFlashBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  applyAdminMode("ice");
+  const nextColor = "#dff7ff";
+  state.background = nextColor;
+  backgroundPicker.value = nextColor;
+  fillCanvas(nextColor);
+  pushGlobalActionPayload({
+    type: "background-fill",
+    color: nextColor
+  });
+  statusMessageEl.textContent = "Ice flash launched.";
+});
+superBlackoutBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  applyAdminMode("blackout");
+  document.body.classList.remove("screen-shake");
+  void document.body.offsetWidth;
+  document.body.classList.add("screen-shake");
+  window.setTimeout(() => {
+    document.body.classList.remove("screen-shake");
+  }, 650);
+  pushGlobalAction("shake");
+  pushGlobalActionPayload({
+    type: "background-fill",
+    color: "#101723"
+  });
+  statusMessageEl.textContent = "Super blackout launched.";
 });
 startWatchModeBtn.addEventListener("click", () => {
   if (!state.adminUnlocked) {

@@ -880,6 +880,18 @@ body.party-candy {
     linear-gradient(180deg, #fff1f7 0%, #ffe0f0 50%, #ffe8b8 100%);
 }
 
+body.party-lava {
+  background:
+    radial-gradient(circle at top, rgba(255, 150, 94, 0.66), transparent 24%),
+    linear-gradient(180deg, #fff1de 0%, #ffb28e 38%, #ff7a4b 72%, #3a120d 100%);
+}
+
+body.party-ice {
+  background:
+    radial-gradient(circle at top, rgba(223, 247, 255, 0.8), transparent 24%),
+    linear-gradient(180deg, #f1fdff 0%, #dff7ff 50%, #cdeeff 100%);
+}
+
 body.screen-shake {
   animation: screen-shake 650ms ease;
 }
