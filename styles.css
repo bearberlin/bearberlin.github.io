@@ -239,6 +239,11 @@ button {
   color: rgba(247, 245, 238, 0.78);
 }
 
+.admin-panel .online-players-label,
+.admin-panel .online-players-copy {
+  color: #ffd96a;
+}
+
 .admin-panel__header {
   display: flex;
   justify-content: space-between;
