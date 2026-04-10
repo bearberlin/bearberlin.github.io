@@ -54,6 +54,11 @@ const realtimePreviewEl = document.getElementById("realtime-preview");
 const globalBannerEl = document.getElementById("global-banner");
 const globalBannerTitleEl = document.getElementById("global-banner-title");
 const globalBannerTextEl = document.getElementById("global-banner-text");
+const challengePanelEl = document.getElementById("challenge-panel");
+const challengeCategoryEl = document.getElementById("challenge-category");
+const challengeNoteEl = document.getElementById("challenge-note");
+const challengeWinnerEl = document.getElementById("challenge-winner");
+const submitChallengeBtn = document.getElementById("submit-challenge");
 const gameTextOverlayEl = document.getElementById("game-text-overlay");
 const gameTextTitleEl = document.getElementById("game-text-title");
 const gameTextValueEl = document.getElementById("game-text-value");
@@ -63,6 +68,14 @@ const clearGlobalMessageBtn = document.getElementById("clear-global-message");
 const watchModeStatusEl = document.getElementById("watch-mode-status");
 const startWatchModeBtn = document.getElementById("start-watch-mode");
 const stopWatchModeBtn = document.getElementById("stop-watch-mode");
+const challengeAdminStatusEl = document.getElementById("challenge-admin-status");
+const challengeSubmissionCountEl = document.getElementById("challenge-submission-count");
+const challengeSelectedPlayerEl = document.getElementById("challenge-selected-player");
+const challengePreviewImageEl = document.getElementById("challenge-preview-image");
+const startChallengeBtn = document.getElementById("start-challenge");
+const nextSubmissionBtn = document.getElementById("next-submission");
+const pickWinnerBtn = document.getElementById("pick-winner");
+const endChallengeBtn = document.getElementById("end-challenge");
 
 const brushToolBtn = document.getElementById("brush-tool");
 const eraserToolBtn = document.getElementById("eraser-tool");
@@ -99,6 +112,10 @@ const state = {
   brushSize: Number(brushSize.value),
   background: backgroundPicker.value,
   watchModeEnabled: false,
+  challenge: null,
+  challengeWinner: null,
+  challengeSubmissions: [],
+  selectedSubmissionIndex: 0,
   isDrawing: false,
   lastPoint: null,
   strokeCount: 0
@@ -130,6 +147,7 @@ const loadingSteps = [
 const OWNER_STORAGE_KEY = "color-current-owner-access";
 const FRIEND_STORAGE_KEY = "color-current-friend-access";
 const SESSION_STORAGE_KEY = "color-current-session-id";
+const PLAYER_NAME_STORAGE_KEY = "color-current-player-name";
 const PERMISSION_QUERY_KEY = "permission";
 const OWNER_QUERY_KEY = "bear";
 const FIREBASE_CONFIG = window.COLOR_CURRENT_FIREBASE_CONFIG || { enabled: false };
@@ -144,6 +162,9 @@ let firebaseGlobalMessageRef = null;
 let firebaseGlobalActionRef = null;
 let firebaseWatchModeRef = null;
 let firebaseWatchStrokeRef = null;
+let firebaseChallengeCurrentRef = null;
+let firebaseChallengeSubmissionsRef = null;
+let firebaseChallengeWinnerRef = null;
 let firebaseViewerPresenceRef = null;
 let firebaseViewersRef = null;
 let firebasePresenceReady = false;
@@ -152,6 +173,28 @@ let firebaseAppBooted = false;
 let lastGlobalActionToken = null;
 let lastWatchStrokeToken = null;
 const surprisePalette = ["#1530ff", "#ff5f36", "#f5c400", "#08b981", "#ff7fbe", "#171717"];
+const challengeCategories = [
+  "dragon",
+  "treasure chest",
+  "spaceship",
+  "pizza slice",
+  "octopus",
+  "race car",
+  "robot",
+  "castle",
+  "penguin",
+  "volcano",
+  "unicorn",
+  "monster truck",
+  "ice cream cone",
+  "rocket",
+  "guitar",
+  "butterfly",
+  "skateboard",
+  "tiger",
+  "waterfall",
+  "dinosaur"
+];
 const sessionId = window.localStorage.getItem(SESSION_STORAGE_KEY) || `session-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
 window.localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
 
@@ -315,6 +358,103 @@ function showGlobalBanner(message) {
   gameTextValueEl.textContent = trimmedMessage;
 }
 
+function getStoredPlayerName() {
+  return String(window.localStorage.getItem(PLAYER_NAME_STORAGE_KEY) || "").trim();
+}
+
+function getPlayerName() {
+  const existingName = getStoredPlayerName();
+  if (existingName) {
+    return existingName;
+  }
+
+  const typedName = window.prompt("Pick a name for your drawing.");
+  const nextName = String(typedName || "").trim();
+  if (!nextName) {
+    return "";
+  }
+
+  window.localStorage.setItem(PLAYER_NAME_STORAGE_KEY, nextName);
+  return nextName;
+}
+
+function updateChallengeUI() {
+  const activeChallenge = state.challenge && state.challenge.active ? state.challenge : null;
+  const hasActiveChallenge = Boolean(activeChallenge);
+
+  if (challengeCategoryEl) {
+    challengeCategoryEl.textContent = hasActiveChallenge
+      ? `Draw: ${activeChallenge.category}`
+      : "Waiting for Bear to start a challenge";
+  }
+
+  if (challengeNoteEl) {
+    challengeNoteEl.textContent = hasActiveChallenge
+      ? "Draw the category, then press submit so Bear can judge it."
+      : "When Bear starts one, everyone can try drawing the same thing.";
+  }
+
+  if (submitChallengeBtn) {
+    submitChallengeBtn.disabled = !hasActiveChallenge;
+  }
+
+  const winner = state.challengeWinner;
+  const showWinner = Boolean(winner && winner.playerName);
+  if (challengeWinnerEl) {
+    challengeWinnerEl.classList.toggle("is-hidden", !showWinner);
+    challengeWinnerEl.textContent = showWinner
+      ? `${winner.playerName} won with ${winner.category}.`
+      : "";
+  }
+}
+
+function getSelectedChallengeSubmission() {
+  if (!state.challengeSubmissions.length) {
+    return null;
+  }
+
+  const safeIndex = Math.max(0, Math.min(state.selectedSubmissionIndex, state.challengeSubmissions.length - 1));
+  state.selectedSubmissionIndex = safeIndex;
+  return state.challengeSubmissions[safeIndex];
+}
+
+function updateChallengeAdminUI() {
+  if (!challengeAdminStatusEl || !challengeSubmissionCountEl || !challengeSelectedPlayerEl || !challengePreviewImageEl) {
+    return;
+  }
+
+  const activeChallenge = state.challenge && state.challenge.active ? state.challenge : null;
+  challengeAdminStatusEl.textContent = activeChallenge
+    ? `Current category: ${activeChallenge.category}`
+    : "No challenge is running right now.";
+
+  const count = state.challengeSubmissions.length;
+  challengeSubmissionCountEl.textContent = count === 1 ? "1 drawing submitted" : `${count} drawings submitted`;
+
+  const selectedSubmission = getSelectedChallengeSubmission();
+  if (!selectedSubmission) {
+    challengeSelectedPlayerEl.textContent = "No drawing selected yet.";
+    challengePreviewImageEl.classList.add("is-hidden");
+    challengePreviewImageEl.removeAttribute("src");
+  } else {
+    challengeSelectedPlayerEl.textContent = `Looking at ${selectedSubmission.playerName}'s drawing.`;
+    challengePreviewImageEl.src = selectedSubmission.imageData;
+    challengePreviewImageEl.classList.remove("is-hidden");
+  }
+
+  if (nextSubmissionBtn) {
+    nextSubmissionBtn.disabled = count < 2;
+  }
+
+  if (pickWinnerBtn) {
+    pickWinnerBtn.disabled = !activeChallenge || !selectedSubmission;
+  }
+
+  if (endChallengeBtn) {
+    endChallengeBtn.disabled = !activeChallenge;
+  }
+}
+
 function isDrawingFrozen() {
   return state.adminMode === "freeze";
 }
@@ -375,6 +515,9 @@ async function setupRealtimePresence() {
       firebaseGlobalActionRef = ref(firebaseDatabase, "global/action");
       firebaseWatchModeRef = ref(firebaseDatabase, "global/watchEnabled");
       firebaseWatchStrokeRef = ref(firebaseDatabase, "global/watchStroke");
+      firebaseChallengeCurrentRef = ref(firebaseDatabase, "global/challenge/current");
+      firebaseChallengeSubmissionsRef = ref(firebaseDatabase, "global/challenge/submissions");
+      firebaseChallengeWinnerRef = ref(firebaseDatabase, "global/challenge/winner");
       firebaseViewersRef = ref(firebaseDatabase, "presence/viewers");
       firebaseViewerPresenceRef = ref(firebaseDatabase, `presence/viewers/${sessionId}`);
       firebaseAppBooted = true;
@@ -423,6 +566,28 @@ async function setupRealtimePresence() {
         }
 
         drawRemoteSegment(payload);
+      });
+
+      onValue(firebaseChallengeCurrentRef, (snapshot) => {
+        const payload = snapshot.val();
+        state.challenge = payload && typeof payload.category === "string" ? payload : null;
+        updateChallengeUI();
+        updateChallengeAdminUI();
+      });
+
+      onValue(firebaseChallengeSubmissionsRef, (snapshot) => {
+        const raw = snapshot.val() || {};
+        state.challengeSubmissions = Object.values(raw)
+          .filter((entry) => entry && typeof entry.imageData === "string" && typeof entry.playerName === "string")
+          .sort((left, right) => (right.updatedAt || 0) - (left.updatedAt || 0));
+        state.selectedSubmissionIndex = Math.min(state.selectedSubmissionIndex, Math.max(state.challengeSubmissions.length - 1, 0));
+        updateChallengeAdminUI();
+      });
+
+      onValue(firebaseChallengeWinnerRef, (snapshot) => {
+        const payload = snapshot.val();
+        state.challengeWinner = payload && typeof payload.playerName === "string" ? payload : null;
+        updateChallengeUI();
       });
 
       onValue(firebaseViewersRef, (snapshot) => {
@@ -607,6 +772,145 @@ function pushWatchStroke(segment) {
     }))
     .catch(() => {
       statusMessageEl.textContent = "Watch draw could not update.";
+    });
+}
+
+function startRandomChallenge() {
+  if (!firebaseChallengeCurrentRef || !firebaseChallengeSubmissionsRef || !firebaseChallengeWinnerRef) {
+    statusMessageEl.textContent = "Firebase is not ready yet.";
+    return;
+  }
+
+  const category = challengeCategories[Math.floor(Math.random() * challengeCategories.length)];
+  const payload = {
+    id: `challenge-${Date.now()}`,
+    category,
+    active: true,
+    createdAt: Date.now(),
+    createdBy: "bear"
+  };
+
+  import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js")
+    .then(({ set }) => Promise.all([
+      set(firebaseChallengeCurrentRef, payload),
+      set(firebaseChallengeSubmissionsRef, null),
+      set(firebaseChallengeWinnerRef, null)
+    ]))
+    .then(() => {
+      state.challenge = payload;
+      state.challengeWinner = null;
+      state.challengeSubmissions = [];
+      state.selectedSubmissionIndex = 0;
+      updateChallengeUI();
+      updateChallengeAdminUI();
+      statusMessageEl.textContent = `Challenge started: draw ${category}.`;
+    })
+    .catch(() => {
+      statusMessageEl.textContent = "Challenge could not start.";
+    });
+}
+
+function endChallenge() {
+  if (!firebaseChallengeCurrentRef) {
+    statusMessageEl.textContent = "Firebase is not ready yet.";
+    return;
+  }
+
+  import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js")
+    .then(({ set }) => set(firebaseChallengeCurrentRef, null))
+    .then(() => {
+      state.challenge = null;
+      updateChallengeUI();
+      updateChallengeAdminUI();
+      statusMessageEl.textContent = "Challenge ended.";
+    })
+    .catch(() => {
+      statusMessageEl.textContent = "Challenge could not end.";
+    });
+}
+
+function nextChallengeSubmission() {
+  if (!state.challengeSubmissions.length) {
+    statusMessageEl.textContent = "No drawings have been submitted yet.";
+    return;
+  }
+
+  state.selectedSubmissionIndex = (state.selectedSubmissionIndex + 1) % state.challengeSubmissions.length;
+  updateChallengeAdminUI();
+  const selectedSubmission = getSelectedChallengeSubmission();
+  statusMessageEl.textContent = selectedSubmission
+    ? `Showing ${selectedSubmission.playerName}'s drawing.`
+    : "No drawing selected yet.";
+}
+
+function pickChallengeWinner() {
+  const activeChallenge = state.challenge && state.challenge.active ? state.challenge : null;
+  const selectedSubmission = getSelectedChallengeSubmission();
+  if (!activeChallenge || !selectedSubmission) {
+    statusMessageEl.textContent = "Start a challenge and select a drawing first.";
+    return;
+  }
+
+  const winnerPayload = {
+    challengeId: activeChallenge.id,
+    category: activeChallenge.category,
+    playerName: selectedSubmission.playerName,
+    sessionId: selectedSubmission.sessionId,
+    announcedAt: Date.now()
+  };
+
+  import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js")
+    .then(({ set }) => set(firebaseChallengeWinnerRef, winnerPayload))
+    .then(() => {
+      state.challengeWinner = winnerPayload;
+      updateChallengeUI();
+      statusMessageEl.textContent = `${winnerPayload.playerName} wins the ${winnerPayload.category} challenge.`;
+    })
+    .catch(() => {
+      statusMessageEl.textContent = "Winner could not be saved.";
+    });
+}
+
+function submitChallengeDrawing() {
+  const activeChallenge = state.challenge && state.challenge.active ? state.challenge : null;
+  if (!activeChallenge) {
+    statusMessageEl.textContent = "Wait for Bear to start a challenge.";
+    return;
+  }
+
+  if (state.strokeCount < 1) {
+    statusMessageEl.textContent = "Draw something first.";
+    return;
+  }
+
+  const playerName = getPlayerName();
+  if (!playerName) {
+    statusMessageEl.textContent = "Pick a name before submitting.";
+    return;
+  }
+
+  if (!firebaseChallengeSubmissionsRef) {
+    statusMessageEl.textContent = "Firebase is not ready yet.";
+    return;
+  }
+
+  const imageData = canvas.toDataURL("image/png");
+  const payload = {
+    sessionId,
+    playerName,
+    challengeId: activeChallenge.id,
+    category: activeChallenge.category,
+    imageData,
+    updatedAt: Date.now()
+  };
+
+  import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js")
+    .then(({ ref, set }) => set(ref(firebaseDatabase, `global/challenge/submissions/${sessionId}`), payload))
+    .then(() => {
+      statusMessageEl.textContent = "Challenge drawing submitted.";
+    })
+    .catch(() => {
+      statusMessageEl.textContent = "Challenge drawing could not submit.";
     });
 }
 
@@ -1627,6 +1931,35 @@ drawMotorcycleBtn.addEventListener("click", () => {
   drawMotorcycleArt();
   statusMessageEl.textContent = "Motorcycle drawn.";
 });
+startChallengeBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  startRandomChallenge();
+});
+nextSubmissionBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  nextChallengeSubmission();
+});
+pickWinnerBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  pickChallengeWinner();
+});
+endChallengeBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  endChallenge();
+});
+submitChallengeBtn.addEventListener("click", submitChallengeDrawing);
 startWatchModeBtn.addEventListener("click", () => {
   if (!state.adminUnlocked) {
     return;
@@ -1861,6 +2194,8 @@ document.body.tabIndex = -1;
 if (globalMessageInputEl) {
   globalMessageInputEl.disabled = !state.adminUnlocked;
 }
+updateChallengeUI();
+updateChallengeAdminUI();
 updateColorLabel();
 updateBrushLabel();
 updateToolUI();

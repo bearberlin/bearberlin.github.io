@@ -169,6 +169,34 @@ button {
   font-size: clamp(1.2rem, 3.5vw, 1.8rem);
 }
 
+.challenge-panel {
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+  background:
+    linear-gradient(180deg, rgba(227, 244, 255, 0.95), rgba(255, 247, 219, 0.95)),
+    var(--panel);
+  border-color: rgba(21, 48, 255, 0.16);
+}
+
+.challenge-panel strong {
+  font-size: clamp(1.3rem, 3.6vw, 2rem);
+}
+
+.challenge-submit-button {
+  margin-top: 0.35rem;
+}
+
+.challenge-winner {
+  margin: 0;
+  color: #1530ff;
+  font-weight: 700;
+}
+
+.challenge-winner.is-hidden {
+  display: none;
+}
+
 .game-text-overlay {
   position: absolute;
   top: 1.3rem;
@@ -314,6 +342,19 @@ button {
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.1);
   color: #f7f5ee;
+}
+
+.challenge-preview-image {
+  width: 100%;
+  max-height: 18rem;
+  object-fit: contain;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.challenge-preview-image.is-hidden {
+  display: none;
 }
 
 .home-shell {

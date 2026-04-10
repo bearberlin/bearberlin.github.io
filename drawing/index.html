@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../styles.css?v=20260410-1215">
+  <link rel="stylesheet" href="../styles.css?v=20260410-1320">
 </head>
 <body>
   <div id="confetti-layer" class="confetti-layer" aria-hidden="true"></div>
@@ -68,6 +68,14 @@
       <span class="section-label">Global Message</span>
       <strong id="global-banner-title">Bear Broadcast</strong>
       <p id="global-banner-text" class="player-counter-note"></p>
+    </section>
+
+    <section id="challenge-panel" class="challenge-panel panel" aria-live="polite">
+      <span class="section-label">Challenge Mode</span>
+      <strong id="challenge-category">Waiting for Bear to start a challenge</strong>
+      <p id="challenge-note" class="player-counter-note">When Bear starts one, everyone can try drawing the same thing.</p>
+      <p id="challenge-winner" class="challenge-winner is-hidden"></p>
+      <button id="submit-challenge" class="action-button primary challenge-submit-button" type="button" disabled>Submit My Drawing</button>
     </section>
 
     <section id="admin-panel" class="admin-panel panel is-hidden" aria-label="Creator panel">
@@ -165,6 +173,20 @@
           <div class="admin-mode-grid admin-action-grid">
             <button id="send-global-message" class="tool-button admin-action-button" type="button">Send Global Text</button>
             <button id="clear-global-message" class="tool-button admin-action-button" type="button">Clear Global Text</button>
+          </div>
+        </div>
+
+        <div class="admin-share-box">
+          <span class="section-label">Challenge Judge</span>
+          <p id="challenge-admin-status" class="admin-copy">No challenge is running right now.</p>
+          <p id="challenge-submission-count" class="admin-copy">0 drawings submitted</p>
+          <p id="challenge-selected-player" class="admin-copy">No drawing selected yet.</p>
+          <img id="challenge-preview-image" class="challenge-preview-image is-hidden" alt="Selected challenge drawing preview">
+          <div class="admin-mode-grid admin-action-grid">
+            <button id="start-challenge" class="tool-button admin-action-button" type="button">Start Random Challenge</button>
+            <button id="next-submission" class="tool-button admin-action-button" type="button">Next Drawing</button>
+            <button id="pick-winner" class="tool-button admin-action-button" type="button">Pick Winner</button>
+            <button id="end-challenge" class="tool-button admin-action-button" type="button">End Challenge</button>
           </div>
         </div>
 
@@ -297,6 +319,6 @@
       measurementId: "G-JGCRDHMJQK"
     };
   </script>
-  <script src="../script.js?v=20260410-1245"></script>
+  <script src="../script.js?v=20260410-1320"></script>
 </body>
 </html>
