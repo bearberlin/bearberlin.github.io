@@ -29,6 +29,9 @@ const globalBannerTextEl = document.getElementById("global-banner-text");
 const globalMessageInputEl = document.getElementById("global-message-input");
 const sendGlobalMessageBtn = document.getElementById("send-global-message");
 const clearGlobalMessageBtn = document.getElementById("clear-global-message");
+const watchModeStatusEl = document.getElementById("watch-mode-status");
+const startWatchModeBtn = document.getElementById("start-watch-mode");
+const stopWatchModeBtn = document.getElementById("stop-watch-mode");
 
 const brushToolBtn = document.getElementById("brush-tool");
 const eraserToolBtn = document.getElementById("eraser-tool");
@@ -64,6 +67,7 @@ const state = {
   color: colorPicker.value,
   brushSize: Number(brushSize.value),
   background: backgroundPicker.value,
+  watchModeEnabled: false,
   isDrawing: false,
   lastPoint: null,
   strokeCount: 0
@@ -106,10 +110,13 @@ let firebaseBearPresenceRef = null;
 let firebaseGlobalModeRef = null;
 let firebaseGlobalMessageRef = null;
 let firebaseGlobalActionRef = null;
+let firebaseWatchModeRef = null;
+let firebaseWatchStrokeRef = null;
 let firebasePresenceReady = false;
 let firebaseReady = false;
 let firebaseAppBooted = false;
 let lastGlobalActionToken = null;
+let lastWatchStrokeToken = null;
 
 function setLoadingState(step) {
   loadingMessageEl.textContent = step.message;
@@ -169,6 +176,20 @@ function isDrawingFrozen() {
   return state.adminMode === "freeze";
 }
 
+function isOwnerBrowser() {
+  return window.localStorage.getItem(OWNER_STORAGE_KEY) === "true";
+}
+
+function updateWatchModeStatus(enabled) {
+  if (!watchModeStatusEl) {
+    return;
+  }
+
+  watchModeStatusEl.textContent = enabled
+    ? "On. Everyone can watch Bear draw right now."
+    : "Off for everyone right now.";
+}
+
 function hasFirebaseConfig() {
   const requiredKeys = ["apiKey", "authDomain", "databaseURL", "projectId", "appId"];
   return FIREBASE_CONFIG.enabled && requiredKeys.every((key) => typeof FIREBASE_CONFIG[key] === "string" && FIREBASE_CONFIG[key].trim());
@@ -194,6 +215,8 @@ async function setupRealtimePresence() {
       firebaseGlobalModeRef = ref(firebaseDatabase, "global/mode");
       firebaseGlobalMessageRef = ref(firebaseDatabase, "global/message");
       firebaseGlobalActionRef = ref(firebaseDatabase, "global/action");
+      firebaseWatchModeRef = ref(firebaseDatabase, "global/watchEnabled");
+      firebaseWatchStrokeRef = ref(firebaseDatabase, "global/watchStroke");
       firebaseAppBooted = true;
     }
 
@@ -219,6 +242,27 @@ async function setupRealtimePresence() {
         const payload = snapshot.val();
         const nextMessage = payload && typeof payload.text === "string" ? payload.text : "";
         showGlobalBanner(nextMessage);
+      });
+
+      onValue(firebaseWatchModeRef, (snapshot) => {
+        const enabled = snapshot.val() === true;
+        state.watchModeEnabled = enabled;
+        updateWatchModeStatus(enabled);
+      });
+
+      onValue(firebaseWatchStrokeRef, (snapshot) => {
+        const payload = snapshot.val();
+        if (!payload || !payload.token || payload.token === lastWatchStrokeToken) {
+          return;
+        }
+
+        lastWatchStrokeToken = payload.token;
+
+        if (payload.watchEnabled !== true || payload.sender !== "bear" || isOwnerBrowser()) {
+          return;
+        }
+
+        drawRemoteSegment(payload);
       });
 
       onValue(firebaseGlobalActionRef, (snapshot) => {
@@ -304,6 +348,36 @@ function pushGlobalAction(type) {
     }))
     .catch(() => {
       statusMessageEl.textContent = "Global command could not update.";
+    });
+}
+
+function pushWatchMode(enabled) {
+  if (!firebaseWatchModeRef) {
+    statusMessageEl.textContent = "Firebase is not ready yet.";
+    return;
+  }
+
+  import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js")
+    .then(({ set }) => set(firebaseWatchModeRef, enabled))
+    .catch(() => {
+      statusMessageEl.textContent = "Watch mode could not update.";
+    });
+}
+
+function pushWatchStroke(segment) {
+  if (!firebaseWatchStrokeRef || !state.watchModeEnabled || !isOwnerBrowser()) {
+    return;
+  }
+
+  import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js")
+    .then(({ set }) => set(firebaseWatchStrokeRef, {
+      ...segment,
+      sender: "bear",
+      watchEnabled: true,
+      token: `stroke-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`
+    }))
+    .catch(() => {
+      statusMessageEl.textContent = "Watch draw could not update.";
     });
 }
 
@@ -551,6 +625,13 @@ function updateStats(pointerLabel = pointerStateEl.textContent) {
   pointerStateEl.textContent = pointerLabel;
 }
 
+function strokeLine(segment) {
+  context.beginPath();
+  context.moveTo(segment.from.x, segment.from.y);
+  context.lineTo(segment.to.x, segment.to.y);
+  context.stroke();
+}
+
 function fillCanvas(color) {
   context.save();
   context.globalCompositeOperation = "source-over";
@@ -643,11 +724,36 @@ function setDrawingStyle() {
 function drawSegment(from, to) {
   setDrawingStyle();
   getMirroredSegments(from, to).forEach((segment) => {
-    context.beginPath();
-    context.moveTo(segment.from.x, segment.from.y);
-    context.lineTo(segment.to.x, segment.to.y);
-    context.stroke();
+    strokeLine(segment);
+    pushWatchStroke({
+      from: segment.from,
+      to: segment.to,
+      lineWidth: state.brushSize,
+      erase: state.tool === "eraser",
+      color: state.color
+    });
   });
+}
+
+function drawRemoteSegment(payload) {
+  context.save();
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  context.lineWidth = Number(payload.lineWidth) || defaultBrushSize;
+
+  if (payload.erase) {
+    context.globalCompositeOperation = "destination-out";
+    context.strokeStyle = "rgba(0, 0, 0, 1)";
+  } else {
+    context.globalCompositeOperation = "source-over";
+    context.strokeStyle = payload.color || "#1530ff";
+  }
+
+  strokeLine({
+    from: payload.from,
+    to: payload.to
+  });
+  context.restore();
 }
 
 function trySetPointerCapture(event) {
@@ -836,6 +942,24 @@ globalClearBtn.addEventListener("click", () => {
   resetCanvas();
   pushGlobalAction("clear");
   statusMessageEl.textContent = "Global clear sent.";
+});
+startWatchModeBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  pushWatchMode(true);
+  updateWatchModeStatus(true);
+  statusMessageEl.textContent = "Watch Bear Draw is on.";
+});
+stopWatchModeBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  pushWatchMode(false);
+  updateWatchModeStatus(false);
+  statusMessageEl.textContent = "Watch Bear Draw is off.";
 });
 sendGlobalMessageBtn.addEventListener("click", () => {
   if (!state.adminUnlocked) {
