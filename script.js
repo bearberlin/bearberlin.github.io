@@ -121,6 +121,7 @@ function getPermissionLink() {
 function updateAdminAccessUI() {
   adminLockedEl.classList.toggle("is-hidden", state.adminUnlocked);
   adminControlsEl.classList.toggle("is-hidden", !state.adminUnlocked);
+  openAdminBtn.classList.toggle("is-hidden", !state.adminUnlocked);
 
   if (permissionLinkEl) {
     permissionLinkEl.value = getPermissionLink();
@@ -198,6 +199,10 @@ function handleAdminShortcut(event) {
   const target = event.target;
 
   if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+    return;
+  }
+
+  if (!state.adminUnlocked) {
     return;
   }
 
