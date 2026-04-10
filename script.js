@@ -175,6 +175,7 @@ function applyAdminMode(mode) {
 function openAdminPanel() {
   state.adminOpen = true;
   adminPanelEl.classList.remove("is-hidden");
+  statusMessageEl.textContent = "Bear controls opened.";
 }
 
 function closeAdminPanel() {
@@ -207,6 +208,20 @@ function handleAdminShortcut(event) {
   } else {
     openAdminPanel();
   }
+}
+
+function focusPageForShortcuts(event) {
+  const target = event.target;
+
+  if (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLButtonElement
+  ) {
+    return;
+  }
+
+  document.body.focus();
 }
 
 async function copyPermissionLink() {
@@ -595,8 +610,12 @@ canvas.addEventListener("pointercancel", endStroke);
 
 window.addEventListener("resize", resizeCanvas);
 window.addEventListener("keydown", handleAdminShortcut);
+window.addEventListener("keyup", handleAdminShortcut);
 document.addEventListener("keydown", handleAdminShortcut);
+document.addEventListener("keyup", handleAdminShortcut);
+document.addEventListener("pointerdown", focusPageForShortcuts);
 
+document.body.tabIndex = -1;
 updateColorLabel();
 updateBrushLabel();
 updateToolUI();
