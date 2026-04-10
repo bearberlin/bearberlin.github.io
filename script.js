@@ -973,7 +973,14 @@ sendGlobalMessageBtn.addEventListener("click", () => {
     return;
   }
 
-  const message = globalMessageInputEl.value.trim();
+  let message = globalMessageInputEl.value.trim();
+
+  if (!message) {
+    const typedMessage = window.prompt("What should the global text say?");
+    message = String(typedMessage || "").trim();
+    globalMessageInputEl.value = message;
+  }
+
   pushGlobalMessage(message);
   showGlobalBanner(message);
   statusMessageEl.textContent = message ? "Global text sent." : "Global text was empty.";
