@@ -787,6 +787,14 @@ body.party-blackout #drawing-surface {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
+body.party-invert {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+body.party-invert #drawing-surface {
+  box-shadow: inset 0 0 0 1px rgba(20, 32, 51, 0.18);
+}
+
 .mirror-guides {
   position: absolute;
   inset: 0.8rem;

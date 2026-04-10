@@ -18,6 +18,8 @@ const adminModeLabelEl = document.getElementById("admin-mode-label");
 const adminModeButtons = document.querySelectorAll(".admin-mode-button");
 const burstConfettiBtn = document.getElementById("burst-confetti");
 const resetPartyBtn = document.getElementById("reset-party");
+const globalBurstBtn = document.getElementById("global-burst");
+const globalClearBtn = document.getElementById("global-clear");
 const multiplayerStatusEl = document.getElementById("multiplayer-status");
 const multiplayerNoteEl = document.getElementById("multiplayer-note");
 const realtimePreviewEl = document.getElementById("realtime-preview");
@@ -103,9 +105,11 @@ let firebaseConnectedRef = null;
 let firebaseBearPresenceRef = null;
 let firebaseGlobalModeRef = null;
 let firebaseGlobalMessageRef = null;
+let firebaseGlobalActionRef = null;
 let firebasePresenceReady = false;
 let firebaseReady = false;
 let firebaseAppBooted = false;
+let lastGlobalActionToken = null;
 
 function setLoadingState(step) {
   loadingMessageEl.textContent = step.message;
@@ -161,6 +165,10 @@ function showGlobalBanner(message) {
   globalBannerTextEl.textContent = trimmedMessage;
 }
 
+function isDrawingFrozen() {
+  return state.adminMode === "freeze";
+}
+
 function hasFirebaseConfig() {
   const requiredKeys = ["apiKey", "authDomain", "databaseURL", "projectId", "appId"];
   return FIREBASE_CONFIG.enabled && requiredKeys.every((key) => typeof FIREBASE_CONFIG[key] === "string" && FIREBASE_CONFIG[key].trim());
@@ -185,6 +193,7 @@ async function setupRealtimePresence() {
       firebaseBearPresenceRef = ref(firebaseDatabase, "presence/bear");
       firebaseGlobalModeRef = ref(firebaseDatabase, "global/mode");
       firebaseGlobalMessageRef = ref(firebaseDatabase, "global/message");
+      firebaseGlobalActionRef = ref(firebaseDatabase, "global/action");
       firebaseAppBooted = true;
     }
 
@@ -210,6 +219,25 @@ async function setupRealtimePresence() {
         const payload = snapshot.val();
         const nextMessage = payload && typeof payload.text === "string" ? payload.text : "";
         showGlobalBanner(nextMessage);
+      });
+
+      onValue(firebaseGlobalActionRef, (snapshot) => {
+        const payload = snapshot.val();
+        if (!payload || !payload.token || payload.token === lastGlobalActionToken) {
+          return;
+        }
+
+        lastGlobalActionToken = payload.token;
+
+        if (payload.type === "burst") {
+          spawnConfettiBurst();
+        }
+
+        if (payload.type === "clear") {
+          state.strokeCount = 0;
+          resetCanvas();
+          statusMessageEl.textContent = "Bear cleared the canvas for everyone.";
+        }
       });
 
       firebaseReady = true;
@@ -260,6 +288,22 @@ function pushGlobalMessage(message) {
     }))
     .catch(() => {
       statusMessageEl.textContent = "Global text could not update.";
+    });
+}
+
+function pushGlobalAction(type) {
+  if (!firebaseGlobalActionRef) {
+    statusMessageEl.textContent = "Firebase is not ready yet.";
+    return;
+  }
+
+  import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js")
+    .then(({ set }) => set(firebaseGlobalActionRef, {
+      type,
+      token: `${type}-${Date.now()}`
+    }))
+    .catch(() => {
+      statusMessageEl.textContent = "Global command could not update.";
     });
 }
 
@@ -332,12 +376,13 @@ function spawnConfettiBurst() {
 }
 
 function applyAdminMode(mode, options = {}) {
-  const nextMode = ["normal", "disco", "confetti", "blackout", "rainbow", "giant"].includes(mode) ? mode : "normal";
+  const nextMode = ["normal", "disco", "confetti", "blackout", "rainbow", "giant", "invert", "freeze"].includes(mode) ? mode : "normal";
   state.adminMode = nextMode;
   updateAdminModeUI();
   document.body.classList.toggle("party-disco", nextMode === "disco");
   document.body.classList.toggle("party-rainbow", nextMode === "rainbow");
   document.body.classList.toggle("party-blackout", nextMode === "blackout");
+  document.body.classList.toggle("party-invert", nextMode === "invert");
 
   clearConfetti();
 
@@ -354,6 +399,12 @@ function applyAdminMode(mode, options = {}) {
     state.brushSize = 36;
     brushSize.value = "36";
     updateBrushLabel();
+  }
+
+  if (nextMode === "freeze") {
+    updateStats("Frozen");
+  } else if (!state.isDrawing) {
+    updateStats("Idle");
   }
 
   if (!options.fromRemote && state.adminUnlocked) {
@@ -624,6 +675,12 @@ function tryReleasePointerCapture(event) {
 }
 
 function startStroke(event) {
+  if (isDrawingFrozen()) {
+    statusMessageEl.textContent = "Bear froze drawing right now.";
+    updateStats("Frozen");
+    return;
+  }
+
   event.preventDefault();
   trySetPointerCapture(event);
   state.isDrawing = true;
@@ -761,6 +818,25 @@ resetPartyBtn.addEventListener("click", () => {
   applyAdminMode("normal");
   statusMessageEl.textContent = "Party powers reset to normal.";
 });
+globalBurstBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  spawnConfettiBurst();
+  pushGlobalAction("burst");
+  statusMessageEl.textContent = "Global burst launched.";
+});
+globalClearBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  state.strokeCount = 0;
+  resetCanvas();
+  pushGlobalAction("clear");
+  statusMessageEl.textContent = "Global clear sent.";
+});
 sendGlobalMessageBtn.addEventListener("click", () => {
   if (!state.adminUnlocked) {
     return;
@@ -790,6 +866,16 @@ adminModeButtons.forEach((button) => {
     applyAdminMode(button.dataset.adminMode);
     if (button.dataset.adminMode === "giant") {
       statusMessageEl.textContent = "Bear mode changed to giant brush.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "freeze") {
+      statusMessageEl.textContent = "Bear mode changed to freeze draw.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "invert") {
+      statusMessageEl.textContent = "Bear mode changed to invert.";
       return;
     }
 
