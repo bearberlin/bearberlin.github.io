@@ -188,7 +188,9 @@ function unlockAdminAccess() {
 }
 
 function handleAdminShortcut(event) {
-  if (event.key.toLowerCase() !== "e" || event.metaKey || event.ctrlKey || event.altKey) {
+  const pressedE = event.code === "KeyE" || String(event.key).toLowerCase() === "e";
+
+  if (!pressedE || event.metaKey || event.ctrlKey || event.altKey) {
     return;
   }
 
@@ -593,6 +595,7 @@ canvas.addEventListener("pointercancel", endStroke);
 
 window.addEventListener("resize", resizeCanvas);
 window.addEventListener("keydown", handleAdminShortcut);
+document.addEventListener("keydown", handleAdminShortcut);
 
 updateColorLabel();
 updateBrushLabel();
