@@ -44,6 +44,18 @@ body.party-disco {
   animation: disco-shift 5s linear infinite;
 }
 
+body.party-rainbow {
+  animation: disco-shift 2.2s linear infinite;
+}
+
+body.party-blackout {
+  background:
+    radial-gradient(circle at top left, rgba(255, 95, 54, 0.08), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(21, 48, 255, 0.1), transparent 24%),
+    linear-gradient(180deg, #0d1320, #162033);
+  color: #f6f2ea;
+}
+
 body::before,
 body::after {
   content: "";
@@ -187,7 +199,17 @@ button {
   margin-top: 0.9rem;
 }
 
+.admin-action-grid {
+  margin-top: 0.75rem;
+}
+
 .admin-mode-button {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f7f5ee;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.admin-action-button {
   background: rgba(255, 255, 255, 0.08);
   color: #f7f5ee;
   border-color: rgba(255, 255, 255, 0.12);
@@ -699,6 +721,30 @@ input[type="range"] {
     linear-gradient(180deg, rgba(20, 32, 51, 0.03) 1px, transparent 1px);
   background-size: auto, 28px 28px, 28px 28px;
   border: 1px solid rgba(20, 32, 51, 0.08);
+}
+
+body.party-blackout .panel {
+  background: rgba(18, 26, 41, 0.82);
+  color: #f6f2ea;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.party-blackout .intro,
+body.party-blackout .status-message,
+body.party-blackout .player-counter-note,
+body.party-blackout .section-label,
+body.party-blackout .label,
+body.party-blackout .eyebrow,
+body.party-blackout .helper-copy,
+body.party-blackout .range-row,
+body.party-blackout .home-intro,
+body.party-blackout .home-card p {
+  color: rgba(246, 242, 234, 0.78);
+}
+
+body.party-blackout #drawing-surface {
+  background: #101723;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .mirror-guides {

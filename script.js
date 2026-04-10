@@ -16,6 +16,8 @@ const permissionLinkEl = document.getElementById("permission-link");
 const copyPermissionLinkBtn = document.getElementById("copy-permission-link");
 const adminModeLabelEl = document.getElementById("admin-mode-label");
 const adminModeButtons = document.querySelectorAll(".admin-mode-button");
+const burstConfettiBtn = document.getElementById("burst-confetti");
+const resetPartyBtn = document.getElementById("reset-party");
 
 const brushToolBtn = document.getElementById("brush-tool");
 const eraserToolBtn = document.getElementById("eraser-tool");
@@ -84,6 +86,7 @@ const FRIEND_STORAGE_KEY = "color-current-friend-access";
 const PERMISSION_QUERY_KEY = "permission";
 
 let confettiIntervalId = null;
+const defaultBrushSize = state.brushSize;
 
 function setLoadingState(step) {
   loadingMessageEl.textContent = step.message;
@@ -164,12 +167,24 @@ function applyAdminMode(mode) {
   state.adminMode = mode;
   updateAdminModeUI();
   document.body.classList.toggle("party-disco", mode === "disco");
+  document.body.classList.toggle("party-rainbow", mode === "rainbow");
+  document.body.classList.toggle("party-blackout", mode === "blackout");
 
   clearConfetti();
+
+  state.brushSize = defaultBrushSize;
+  brushSize.value = String(defaultBrushSize);
+  updateBrushLabel();
 
   if (mode === "confetti") {
     spawnConfettiBurst();
     confettiIntervalId = window.setInterval(spawnConfettiBurst, 1800);
+  }
+
+  if (mode === "giant") {
+    state.brushSize = 36;
+    brushSize.value = "36";
+    updateBrushLabel();
   }
 }
 
@@ -551,6 +566,22 @@ claimOwnerAccessBtn.addEventListener("click", () => {
   statusMessageEl.textContent = "Bear controls unlocked on this browser.";
 });
 copyPermissionLinkBtn.addEventListener("click", copyPermissionLink);
+burstConfettiBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  spawnConfettiBurst();
+  statusMessageEl.textContent = "Confetti burst launched.";
+});
+resetPartyBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  applyAdminMode("normal");
+  statusMessageEl.textContent = "Party powers reset to normal.";
+});
 adminModeButtons.forEach((button) => {
   button.addEventListener("click", () => {
     if (!state.adminUnlocked) {
@@ -558,6 +589,11 @@ adminModeButtons.forEach((button) => {
     }
 
     applyAdminMode(button.dataset.adminMode);
+    if (button.dataset.adminMode === "giant") {
+      statusMessageEl.textContent = "Bear mode changed to giant brush.";
+      return;
+    }
+
     statusMessageEl.textContent = `Bear mode changed to ${button.dataset.adminMode}.`;
   });
 });
