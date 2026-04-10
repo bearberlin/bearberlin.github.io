@@ -218,10 +218,6 @@ function handleAdminShortcut(event) {
     return;
   }
 
-  if (!state.adminUnlocked) {
-    return;
-  }
-
   event.preventDefault();
 
   if (state.adminOpen) {
