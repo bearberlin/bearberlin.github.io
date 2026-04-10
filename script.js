@@ -26,6 +26,9 @@ const realtimePreviewEl = document.getElementById("realtime-preview");
 const globalBannerEl = document.getElementById("global-banner");
 const globalBannerTitleEl = document.getElementById("global-banner-title");
 const globalBannerTextEl = document.getElementById("global-banner-text");
+const gameTextOverlayEl = document.getElementById("game-text-overlay");
+const gameTextTitleEl = document.getElementById("game-text-title");
+const gameTextValueEl = document.getElementById("game-text-value");
 const globalMessageInputEl = document.getElementById("global-message-input");
 const sendGlobalMessageBtn = document.getElementById("send-global-message");
 const clearGlobalMessageBtn = document.getElementById("clear-global-message");
@@ -162,14 +165,18 @@ function showGlobalBanner(message) {
   const trimmedMessage = String(message || "").trim();
   const hasMessage = trimmedMessage.length > 0;
   globalBannerEl.classList.toggle("is-hidden", !hasMessage);
+  gameTextOverlayEl.classList.toggle("is-hidden", !hasMessage);
 
   if (!hasMessage) {
     globalBannerTextEl.textContent = "";
+    gameTextValueEl.textContent = "";
     return;
   }
 
   globalBannerTitleEl.textContent = "Bear Broadcast";
   globalBannerTextEl.textContent = trimmedMessage;
+  gameTextTitleEl.textContent = "Bear Broadcast";
+  gameTextValueEl.textContent = trimmedMessage;
 }
 
 function isDrawingFrozen() {

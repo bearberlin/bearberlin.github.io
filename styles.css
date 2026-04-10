@@ -169,6 +169,41 @@ button {
   font-size: clamp(1.2rem, 3.5vw, 1.8rem);
 }
 
+.game-text-overlay {
+  position: absolute;
+  top: 1.3rem;
+  left: 50%;
+  z-index: 3;
+  width: min(92%, 34rem);
+  padding: 0.95rem 1.15rem;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255, 95, 54, 0.22);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(255, 246, 222, 0.94), rgba(255, 233, 244, 0.96));
+  box-shadow: 0 22px 45px rgba(20, 32, 51, 0.18);
+  text-align: center;
+  pointer-events: none;
+}
+
+.game-text-overlay.is-hidden {
+  display: none;
+}
+
+.game-text-overlay strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+}
+
+.game-text-overlay p {
+  margin: 0.35rem 0 0;
+  color: var(--text);
+  font-size: clamp(1rem, 2.8vw, 1.3rem);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
 .player-counter-banner strong {
   display: block;
   margin-top: 0.35rem;
