@@ -28,6 +28,9 @@ const rainbowStormBtn = document.getElementById("rainbow-storm");
 const goldRushBtn = document.getElementById("gold-rush");
 const nightPartyBtn = document.getElementById("night-party");
 const flipColorsBtn = document.getElementById("flip-colors");
+const oceanWashBtn = document.getElementById("ocean-wash");
+const pinkPopBtn = document.getElementById("pink-pop");
+const megaPartyBtn = document.getElementById("mega-party");
 const multiplayerStatusEl = document.getElementById("multiplayer-status");
 const multiplayerNoteEl = document.getElementById("multiplayer-note");
 const realtimePreviewEl = document.getElementById("realtime-preview");
@@ -520,7 +523,7 @@ function spawnConfettiBurst() {
 }
 
 function applyAdminMode(mode, options = {}) {
-  const nextMode = ["normal", "disco", "confetti", "blackout", "rainbow", "giant", "invert", "freeze", "spotlight", "lockcolor", "mini", "neon", "ghost", "sunset"].includes(mode) ? mode : "normal";
+  const nextMode = ["normal", "disco", "confetti", "blackout", "rainbow", "giant", "invert", "freeze", "spotlight", "lockcolor", "mini", "neon", "ghost", "sunset", "ocean", "candy"].includes(mode) ? mode : "normal";
   state.adminMode = nextMode;
   updateAdminModeUI();
   document.body.classList.toggle("party-disco", nextMode === "disco");
@@ -531,6 +534,8 @@ function applyAdminMode(mode, options = {}) {
   document.body.classList.toggle("party-neon", nextMode === "neon");
   document.body.classList.toggle("party-ghost", nextMode === "ghost");
   document.body.classList.toggle("party-sunset", nextMode === "sunset");
+  document.body.classList.toggle("party-ocean", nextMode === "ocean");
+  document.body.classList.toggle("party-candy", nextMode === "candy");
 
   clearConfetti();
 
@@ -1134,6 +1139,49 @@ flipColorsBtn.addEventListener("click", () => {
   });
   statusMessageEl.textContent = "Flip colors launched.";
 });
+oceanWashBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  const nextColor = "#bfe9ff";
+  state.background = nextColor;
+  backgroundPicker.value = nextColor;
+  fillCanvas(nextColor);
+  pushGlobalActionPayload({
+    type: "background-fill",
+    color: nextColor
+  });
+  statusMessageEl.textContent = "Ocean wash launched.";
+});
+pinkPopBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  const nextColor = "#ff7fbe";
+  state.color = nextColor;
+  colorPicker.value = nextColor;
+  updateColorLabel();
+  setTool("brush");
+  pushGlobalActionPayload({
+    type: "surprise-color",
+    color: nextColor
+  });
+  statusMessageEl.textContent = "Pink pop launched.";
+});
+megaPartyBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  applyAdminMode("rainbow");
+  for (let index = 0; index < 4; index += 1) {
+    window.setTimeout(spawnConfettiBurst, index * 220);
+  }
+  pushGlobalAction("rainbow-storm");
+  statusMessageEl.textContent = "Mega party launched.";
+});
 startWatchModeBtn.addEventListener("click", () => {
   if (!state.adminUnlocked) {
     return;
@@ -1228,6 +1276,16 @@ adminModeButtons.forEach((button) => {
 
     if (button.dataset.adminMode === "sunset") {
       statusMessageEl.textContent = "Bear mode changed to sunset.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "ocean") {
+      statusMessageEl.textContent = "Bear mode changed to ocean.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "candy") {
+      statusMessageEl.textContent = "Bear mode changed to candy.";
       return;
     }
 

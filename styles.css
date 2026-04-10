@@ -868,6 +868,18 @@ body.party-sunset {
     linear-gradient(180deg, #fff4da 0%, #ffd7d0 50%, #f8d3ff 100%);
 }
 
+body.party-ocean {
+  background:
+    radial-gradient(circle at top, rgba(194, 241, 255, 0.72), transparent 26%),
+    linear-gradient(180deg, #e8fbff 0%, #d7f3ff 52%, #dff1ff 100%);
+}
+
+body.party-candy {
+  background:
+    radial-gradient(circle at top, rgba(255, 210, 235, 0.72), transparent 26%),
+    linear-gradient(180deg, #fff1f7 0%, #ffe0f0 50%, #ffe8b8 100%);
+}
+
 body.screen-shake {
   animation: screen-shake 650ms ease;
 }
