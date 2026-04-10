@@ -10,12 +10,6 @@
   <link rel="stylesheet" href="../styles.css?v=20260409-1115">
 </head>
 <body>
-  <aside class="player-counter panel" aria-label="Player counter">
-    <span class="section-label">Players</span>
-    <strong id="player-count">Coming soon</strong>
-    <p class="player-counter-note">This will count everyone later.</p>
-  </aside>
-
   <div id="loading-screen" class="loading-screen" role="status" aria-live="polite" aria-label="Loading application">
     <div class="loading-screen__backdrop"></div>
     <div class="loading-card">
@@ -132,7 +126,14 @@
       <section class="canvas-panel panel">
         <div class="canvas-topbar">
           <p id="status-message" class="status-message">Press and drag to draw. Touch works too.</p>
-          <button id="reset-view" class="text-button" type="button">Reset Canvas Size</button>
+          <div class="canvas-topbar-actions">
+            <aside class="player-counter panel" aria-label="Player counter">
+              <span class="section-label">Players</span>
+              <strong id="player-count">Coming soon</strong>
+              <p class="player-counter-note">This will count everyone later.</p>
+            </aside>
+            <button id="reset-view" class="text-button" type="button">Reset Canvas Size</button>
+          </div>
         </div>
         <div class="canvas-frame">
           <div class="mirror-guides" id="mirror-guides" aria-hidden="true">
