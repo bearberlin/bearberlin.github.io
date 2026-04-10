@@ -31,6 +31,7 @@ const flipColorsBtn = document.getElementById("flip-colors");
 const oceanWashBtn = document.getElementById("ocean-wash");
 const pinkPopBtn = document.getElementById("pink-pop");
 const megaPartyBtn = document.getElementById("mega-party");
+const randomCommandBtn = document.getElementById("random-command");
 const multiplayerStatusEl = document.getElementById("multiplayer-status");
 const multiplayerNoteEl = document.getElementById("multiplayer-note");
 const realtimePreviewEl = document.getElementById("realtime-preview");
@@ -132,6 +133,98 @@ let firebaseAppBooted = false;
 let lastGlobalActionToken = null;
 let lastWatchStrokeToken = null;
 const surprisePalette = ["#1530ff", "#ff5f36", "#f5c400", "#08b981", "#ff7fbe", "#171717"];
+
+const randomAdminCommands = [
+  { label: "Disco", run: () => applyAdminMode("disco") },
+  { label: "Confetti", run: () => applyAdminMode("confetti") },
+  { label: "Rainbow", run: () => applyAdminMode("rainbow") },
+  { label: "Spotlight", run: () => applyAdminMode("spotlight") },
+  { label: "Neon", run: () => applyAdminMode("neon") },
+  { label: "Ghost", run: () => applyAdminMode("ghost") },
+  { label: "Sunset", run: () => applyAdminMode("sunset") },
+  { label: "Ocean", run: () => applyAdminMode("ocean") },
+  { label: "Candy", run: () => applyAdminMode("candy") },
+  {
+    label: "Global Burst",
+    run: () => {
+      spawnConfettiBurst();
+      pushGlobalAction("burst");
+    }
+  },
+  {
+    label: "Screen Shake",
+    run: () => {
+      document.body.classList.remove("screen-shake");
+      void document.body.offsetWidth;
+      document.body.classList.add("screen-shake");
+      window.setTimeout(() => {
+        document.body.classList.remove("screen-shake");
+      }, 650);
+      pushGlobalAction("shake");
+    }
+  },
+  {
+    label: "Gold Rush",
+    run: () => {
+      const nextColor = "#f5c400";
+      state.color = nextColor;
+      colorPicker.value = nextColor;
+      updateColorLabel();
+      setTool("brush");
+      pushGlobalActionPayload({
+        type: "surprise-color",
+        color: nextColor
+      });
+    }
+  },
+  {
+    label: "Pink Pop",
+    run: () => {
+      const nextColor = "#ff7fbe";
+      state.color = nextColor;
+      colorPicker.value = nextColor;
+      updateColorLabel();
+      setTool("brush");
+      pushGlobalActionPayload({
+        type: "surprise-color",
+        color: nextColor
+      });
+    }
+  },
+  {
+    label: "Ocean Wash",
+    run: () => {
+      const nextColor = "#bfe9ff";
+      state.background = nextColor;
+      backgroundPicker.value = nextColor;
+      fillCanvas(nextColor);
+      pushGlobalActionPayload({
+        type: "background-fill",
+        color: nextColor
+      });
+    }
+  },
+  {
+    label: "Night Party",
+    run: () => {
+      applyAdminMode("blackout");
+      pushGlobalActionPayload({
+        type: "background-fill",
+        color: "#101723"
+      });
+    }
+  },
+  {
+    label: "Mega Party",
+    run: () => {
+      applyAdminMode("rainbow");
+      for (let index = 0; index < 4; index += 1) {
+        window.setTimeout(spawnConfettiBurst, index * 220);
+      }
+      pushGlobalAction("rainbow-storm");
+    }
+  }
+];
 
 function setLoadingState(step) {
   loadingMessageEl.textContent = step.message;
@@ -1181,6 +1274,15 @@ megaPartyBtn.addEventListener("click", () => {
   }
   pushGlobalAction("rainbow-storm");
   statusMessageEl.textContent = "Mega party launched.";
+});
+randomCommandBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  const nextCommand = randomAdminCommands[Math.floor(Math.random() * randomAdminCommands.length)];
+  nextCommand.run();
+  statusMessageEl.textContent = `Random command chose ${nextCommand.label}.`;
 });
 startWatchModeBtn.addEventListener("click", () => {
   if (!state.adminUnlocked) {
