@@ -84,6 +84,7 @@ const loadingSteps = [
 const OWNER_STORAGE_KEY = "color-current-owner-access";
 const FRIEND_STORAGE_KEY = "color-current-friend-access";
 const PERMISSION_QUERY_KEY = "permission";
+const OWNER_QUERY_KEY = "bear";
 
 let confettiIntervalId = null;
 const defaultBrushSize = state.brushSize;
@@ -539,13 +540,19 @@ function toggleMirror() {
   }
 }
 
-const hasPermissionLink = new URLSearchParams(window.location.search).has(PERMISSION_QUERY_KEY);
+const searchParams = new URLSearchParams(window.location.search);
+const hasPermissionLink = searchParams.has(PERMISSION_QUERY_KEY);
+const hasOwnerLink = searchParams.get(OWNER_QUERY_KEY) === "1";
 const ownerAccess = window.localStorage.getItem(OWNER_STORAGE_KEY) === "true";
 const friendAccess = window.localStorage.getItem(FRIEND_STORAGE_KEY) === "true";
 
-if (ownerAccess || friendAccess || hasPermissionLink) {
+if (ownerAccess || friendAccess || hasPermissionLink || hasOwnerLink) {
   if (hasPermissionLink) {
     window.localStorage.setItem(FRIEND_STORAGE_KEY, "true");
+  }
+
+  if (hasOwnerLink) {
+    window.localStorage.setItem(OWNER_STORAGE_KEY, "true");
   }
 
   state.adminUnlocked = true;
