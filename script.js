@@ -20,6 +20,8 @@ const burstConfettiBtn = document.getElementById("burst-confetti");
 const resetPartyBtn = document.getElementById("reset-party");
 const globalBurstBtn = document.getElementById("global-burst");
 const globalClearBtn = document.getElementById("global-clear");
+const globalShakeBtn = document.getElementById("global-shake");
+const surpriseColorBtn = document.getElementById("surprise-color");
 const multiplayerStatusEl = document.getElementById("multiplayer-status");
 const multiplayerNoteEl = document.getElementById("multiplayer-note");
 const realtimePreviewEl = document.getElementById("realtime-preview");
@@ -120,6 +122,7 @@ let firebaseReady = false;
 let firebaseAppBooted = false;
 let lastGlobalActionToken = null;
 let lastWatchStrokeToken = null;
+const surprisePalette = ["#1530ff", "#ff5f36", "#f5c400", "#08b981", "#ff7fbe", "#171717"];
 
 function setLoadingState(step) {
   loadingMessageEl.textContent = step.message;
@@ -181,6 +184,10 @@ function showGlobalBanner(message) {
 
 function isDrawingFrozen() {
   return state.adminMode === "freeze";
+}
+
+function areColorsLocked() {
+  return state.adminMode === "lockcolor";
 }
 
 function isOwnerBrowser() {
@@ -289,6 +296,23 @@ async function setupRealtimePresence() {
           resetCanvas();
           statusMessageEl.textContent = "Bear cleared the canvas for everyone.";
         }
+
+        if (payload.type === "shake") {
+          document.body.classList.remove("screen-shake");
+          void document.body.offsetWidth;
+          document.body.classList.add("screen-shake");
+          window.setTimeout(() => {
+            document.body.classList.remove("screen-shake");
+          }, 650);
+        }
+
+        if (payload.type === "surprise-color" && typeof payload.color === "string") {
+          state.color = payload.color;
+          colorPicker.value = payload.color;
+          updateColorLabel();
+          setTool("brush");
+          statusMessageEl.textContent = "Bear changed the color for everyone.";
+        }
       });
 
       firebaseReady = true;
@@ -352,6 +376,22 @@ function pushGlobalAction(type) {
     .then(({ set }) => set(firebaseGlobalActionRef, {
       type,
       token: `${type}-${Date.now()}`
+    }))
+    .catch(() => {
+      statusMessageEl.textContent = "Global command could not update.";
+    });
+}
+
+function pushGlobalActionPayload(payload) {
+  if (!firebaseGlobalActionRef) {
+    statusMessageEl.textContent = "Firebase is not ready yet.";
+    return;
+  }
+
+  import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js")
+    .then(({ set }) => set(firebaseGlobalActionRef, {
+      ...payload,
+      token: `${payload.type}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`
     }))
     .catch(() => {
       statusMessageEl.textContent = "Global command could not update.";
@@ -457,13 +497,14 @@ function spawnConfettiBurst() {
 }
 
 function applyAdminMode(mode, options = {}) {
-  const nextMode = ["normal", "disco", "confetti", "blackout", "rainbow", "giant", "invert", "freeze"].includes(mode) ? mode : "normal";
+  const nextMode = ["normal", "disco", "confetti", "blackout", "rainbow", "giant", "invert", "freeze", "spotlight", "lockcolor"].includes(mode) ? mode : "normal";
   state.adminMode = nextMode;
   updateAdminModeUI();
   document.body.classList.toggle("party-disco", nextMode === "disco");
   document.body.classList.toggle("party-rainbow", nextMode === "rainbow");
   document.body.classList.toggle("party-blackout", nextMode === "blackout");
   document.body.classList.toggle("party-invert", nextMode === "invert");
+  document.body.classList.toggle("party-spotlight", nextMode === "spotlight");
 
   clearConfetti();
 
@@ -950,6 +991,36 @@ globalClearBtn.addEventListener("click", () => {
   pushGlobalAction("clear");
   statusMessageEl.textContent = "Global clear sent.";
 });
+globalShakeBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  document.body.classList.remove("screen-shake");
+  void document.body.offsetWidth;
+  document.body.classList.add("screen-shake");
+  window.setTimeout(() => {
+    document.body.classList.remove("screen-shake");
+  }, 650);
+  pushGlobalAction("shake");
+  statusMessageEl.textContent = "Global shake launched.";
+});
+surpriseColorBtn.addEventListener("click", () => {
+  if (!state.adminUnlocked) {
+    return;
+  }
+
+  const nextColor = surprisePalette[Math.floor(Math.random() * surprisePalette.length)];
+  state.color = nextColor;
+  colorPicker.value = nextColor;
+  updateColorLabel();
+  setTool("brush");
+  pushGlobalActionPayload({
+    type: "surprise-color",
+    color: nextColor
+  });
+  statusMessageEl.textContent = "Surprise color launched.";
+});
 startWatchModeBtn.addEventListener("click", () => {
   if (!state.adminUnlocked) {
     return;
@@ -1017,11 +1088,27 @@ adminModeButtons.forEach((button) => {
       return;
     }
 
+    if (button.dataset.adminMode === "spotlight") {
+      statusMessageEl.textContent = "Bear mode changed to spotlight.";
+      return;
+    }
+
+    if (button.dataset.adminMode === "lockcolor") {
+      statusMessageEl.textContent = "Bear locked the colors.";
+      return;
+    }
+
     statusMessageEl.textContent = `Bear mode changed to ${button.dataset.adminMode}.`;
   });
 });
 
 colorPicker.addEventListener("input", () => {
+  if (areColorsLocked()) {
+    colorPicker.value = state.color;
+    statusMessageEl.textContent = "Bear locked the colors right now.";
+    return;
+  }
+
   state.color = colorPicker.value;
   updateColorLabel();
 
@@ -1032,6 +1119,11 @@ colorPicker.addEventListener("input", () => {
 
 swatches.forEach((swatch) => {
   swatch.addEventListener("click", () => {
+    if (areColorsLocked()) {
+      statusMessageEl.textContent = "Bear locked the colors right now.";
+      return;
+    }
+
     state.color = swatch.dataset.color;
     colorPicker.value = state.color;
     updateColorLabel();
