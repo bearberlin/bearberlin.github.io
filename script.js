@@ -5,6 +5,16 @@ const loadingMessageEl = document.getElementById("loading-message");
 const loadingProgressBarEl = document.getElementById("loading-progress-bar");
 const loadingPercentEl = document.getElementById("loading-percent");
 const loadingPhaseEl = document.getElementById("loading-phase");
+const confettiLayerEl = document.getElementById("confetti-layer");
+const adminPanelEl = document.getElementById("admin-panel");
+const adminLockedEl = document.getElementById("admin-locked");
+const adminControlsEl = document.getElementById("admin-controls");
+const claimOwnerAccessBtn = document.getElementById("claim-owner-access");
+const closeAdminBtn = document.getElementById("close-admin");
+const permissionLinkEl = document.getElementById("permission-link");
+const copyPermissionLinkBtn = document.getElementById("copy-permission-link");
+const adminModeLabelEl = document.getElementById("admin-mode-label");
+const adminModeButtons = document.querySelectorAll(".admin-mode-button");
 
 const brushToolBtn = document.getElementById("brush-tool");
 const eraserToolBtn = document.getElementById("eraser-tool");
@@ -34,6 +44,9 @@ const state = {
   tool: "brush",
   mirrorMode: "vertical",
   mirrorEnabled: false,
+  adminOpen: false,
+  adminUnlocked: false,
+  adminMode: "normal",
   color: colorPicker.value,
   brushSize: Number(brushSize.value),
   background: backgroundPicker.value,
@@ -65,6 +78,12 @@ const loadingSteps = [
   }
 ];
 
+const OWNER_STORAGE_KEY = "color-current-owner-access";
+const FRIEND_STORAGE_KEY = "color-current-friend-access";
+const PERMISSION_QUERY_KEY = "permission";
+
+let confettiIntervalId = null;
+
 function setLoadingState(step) {
   loadingMessageEl.textContent = step.message;
   loadingProgressBarEl.style.width = `${step.percent}%`;
@@ -90,6 +109,114 @@ function runLoadingSequence() {
     loadingScreenEl.classList.add("is-hidden");
     document.body.classList.remove("is-loading");
   }, 1900);
+}
+
+function getPermissionLink() {
+  const url = new URL(window.location.href);
+  url.searchParams.set(PERMISSION_QUERY_KEY, "granted");
+  return url.toString();
+}
+
+function updateAdminAccessUI() {
+  adminLockedEl.classList.toggle("is-hidden", state.adminUnlocked);
+  adminControlsEl.classList.toggle("is-hidden", !state.adminUnlocked);
+
+  if (permissionLinkEl) {
+    permissionLinkEl.value = getPermissionLink();
+  }
+}
+
+function updateAdminModeUI() {
+  adminModeButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.adminMode === state.adminMode);
+  });
+
+  adminModeLabelEl.textContent = `Mode: ${state.adminMode.charAt(0).toUpperCase()}${state.adminMode.slice(1)}`;
+}
+
+function clearConfetti() {
+  window.clearInterval(confettiIntervalId);
+  confettiIntervalId = null;
+  confettiLayerEl.innerHTML = "";
+}
+
+function spawnConfettiBurst() {
+  const colors = ["#1530ff", "#ff5f36", "#f5c400", "#08b981", "#ff7fbe"];
+
+  for (let index = 0; index < 18; index += 1) {
+    const piece = document.createElement("span");
+    piece.className = "confetti-piece";
+    piece.style.left = `${Math.random() * 100}%`;
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDuration = `${3 + Math.random() * 2.4}s`;
+    piece.style.transform = `translateY(0) rotate(${Math.random() * 360}deg)`;
+    confettiLayerEl.appendChild(piece);
+
+    window.setTimeout(() => {
+      piece.remove();
+    }, 5600);
+  }
+}
+
+function applyAdminMode(mode) {
+  state.adminMode = mode;
+  updateAdminModeUI();
+  document.body.classList.toggle("party-disco", mode === "disco");
+
+  clearConfetti();
+
+  if (mode === "confetti") {
+    spawnConfettiBurst();
+    confettiIntervalId = window.setInterval(spawnConfettiBurst, 1800);
+  }
+}
+
+function openAdminPanel() {
+  state.adminOpen = true;
+  adminPanelEl.classList.remove("is-hidden");
+}
+
+function closeAdminPanel() {
+  state.adminOpen = false;
+  adminPanelEl.classList.add("is-hidden");
+}
+
+function unlockAdminAccess() {
+  state.adminUnlocked = true;
+  updateAdminAccessUI();
+}
+
+function handleAdminShortcut(event) {
+  if (event.key.toLowerCase() !== "e" || event.metaKey || event.ctrlKey || event.altKey) {
+    return;
+  }
+
+  const target = event.target;
+
+  if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+    return;
+  }
+
+  event.preventDefault();
+
+  if (state.adminOpen) {
+    closeAdminPanel();
+  } else {
+    openAdminPanel();
+  }
+}
+
+async function copyPermissionLink() {
+  const link = getPermissionLink();
+
+  try {
+    await navigator.clipboard.writeText(link);
+    statusMessageEl.textContent = "Permission link copied.";
+  } catch (error) {
+    permissionLinkEl.focus();
+    permissionLinkEl.select();
+    statusMessageEl.textContent = "Permission link ready to copy.";
+  }
 }
 
 function updateBrushLabel() {
@@ -374,6 +501,18 @@ function toggleMirror() {
   }
 }
 
+const hasPermissionLink = new URLSearchParams(window.location.search).has(PERMISSION_QUERY_KEY);
+const ownerAccess = window.localStorage.getItem(OWNER_STORAGE_KEY) === "true";
+const friendAccess = window.localStorage.getItem(FRIEND_STORAGE_KEY) === "true";
+
+if (ownerAccess || friendAccess || hasPermissionLink) {
+  if (hasPermissionLink) {
+    window.localStorage.setItem(FRIEND_STORAGE_KEY, "true");
+  }
+
+  state.adminUnlocked = true;
+}
+
 brushToolBtn.addEventListener("click", () => setTool("brush"));
 eraserToolBtn.addEventListener("click", () => setTool("eraser"));
 mirrorOffBtn.addEventListener("click", () => setMirrorMode("off"));
@@ -381,6 +520,23 @@ mirrorVerticalBtn.addEventListener("click", () => setMirrorMode("vertical"));
 mirrorHorizontalBtn.addEventListener("click", () => setMirrorMode("horizontal"));
 mirrorQuadBtn.addEventListener("click", () => setMirrorMode("quad"));
 toggleMirrorBtn.addEventListener("click", toggleMirror);
+closeAdminBtn.addEventListener("click", closeAdminPanel);
+claimOwnerAccessBtn.addEventListener("click", () => {
+  window.localStorage.setItem(OWNER_STORAGE_KEY, "true");
+  unlockAdminAccess();
+  statusMessageEl.textContent = "Bear controls unlocked on this browser.";
+});
+copyPermissionLinkBtn.addEventListener("click", copyPermissionLink);
+adminModeButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    if (!state.adminUnlocked) {
+      return;
+    }
+
+    applyAdminMode(button.dataset.adminMode);
+    statusMessageEl.textContent = `Bear mode changed to ${button.dataset.adminMode}.`;
+  });
+});
 
 colorPicker.addEventListener("input", () => {
   state.color = colorPicker.value;
@@ -434,10 +590,13 @@ canvas.addEventListener("pointerleave", endStroke);
 canvas.addEventListener("pointercancel", endStroke);
 
 window.addEventListener("resize", resizeCanvas);
+window.addEventListener("keydown", handleAdminShortcut);
 
 updateColorLabel();
 updateBrushLabel();
 updateToolUI();
 updateMirrorUI();
+updateAdminAccessUI();
+updateAdminModeUI();
 resizeCanvas();
 runLoadingSequence();

@@ -7,9 +7,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../styles.css?v=20260409-1145">
+  <link rel="stylesheet" href="../styles.css?v=20260409-1210">
 </head>
 <body>
+  <div id="confetti-layer" class="confetti-layer" aria-hidden="true"></div>
+
   <div id="loading-screen" class="loading-screen" role="status" aria-live="polite" aria-label="Loading application">
     <div class="loading-screen__backdrop"></div>
     <div class="loading-card">
@@ -53,6 +55,36 @@
       <span class="section-label">Player Counter</span>
       <strong id="player-count">Coming soon</strong>
       <p id="player-counter-note" class="player-counter-note">This will count everyone later.</p>
+    </section>
+
+    <section id="admin-panel" class="admin-panel panel is-hidden" aria-label="Creator panel">
+      <div class="admin-panel__header">
+        <div>
+          <p class="section-label">Creator Panel</p>
+          <h2>Bear Controls</h2>
+        </div>
+        <button id="close-admin" class="text-button" type="button">Close</button>
+      </div>
+
+      <div id="admin-locked" class="admin-locked">
+        <p class="admin-copy">Press the button below if this is Bear's browser, or open a permission link Bear shared with you.</p>
+        <button id="claim-owner-access" class="action-button primary" type="button">This Is Bear's Browser</button>
+      </div>
+
+      <div id="admin-controls" class="admin-controls is-hidden">
+        <p id="admin-mode-label" class="admin-copy">Mode: Normal</p>
+        <div class="admin-mode-grid">
+          <button data-admin-mode="normal" class="tool-button admin-mode-button is-active" type="button">Normal</button>
+          <button data-admin-mode="disco" class="tool-button admin-mode-button" type="button">Disco</button>
+          <button data-admin-mode="confetti" class="tool-button admin-mode-button" type="button">Confetti</button>
+        </div>
+
+        <div class="admin-share-box">
+          <label class="section-label" for="permission-link">Permission Link</label>
+          <input id="permission-link" class="admin-link-input" type="text" readonly>
+          <button id="copy-permission-link" class="action-button secondary" type="button">Copy Permission Link</button>
+        </div>
+      </div>
     </section>
 
     <section class="workspace">
@@ -145,6 +177,6 @@
     </section>
   </main>
 
-  <script src="../script.js?v=20260409-1145"></script>
+  <script src="../script.js?v=20260409-1210"></script>
 </body>
 </html>
