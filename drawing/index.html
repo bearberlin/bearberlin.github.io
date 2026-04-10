@@ -58,6 +58,12 @@
       <button id="open-admin" class="action-button secondary player-counter-button is-hidden" type="button">Open Bear Controls</button>
     </section>
 
+    <section class="multiplayer-banner panel" aria-label="Multiplayer status">
+      <span class="section-label">Multiplayer Future</span>
+      <strong id="multiplayer-status">Bear is offline</strong>
+      <p id="multiplayer-note" class="player-counter-note">This site is ready for live online status, shared powers, and live drawing later.</p>
+    </section>
+
     <section id="admin-panel" class="admin-panel panel is-hidden" aria-label="Creator panel">
       <div class="admin-panel__header">
         <div>
@@ -92,6 +98,13 @@
           <label class="section-label" for="permission-link">Permission Link</label>
           <input id="permission-link" class="admin-link-input" type="text" readonly>
           <button id="copy-permission-link" class="action-button secondary" type="button">Copy Permission Link</button>
+        </div>
+
+        <div class="admin-share-box">
+          <span class="section-label">Realtime Prep</span>
+          <p class="admin-copy" id="realtime-preview">
+            Waiting for a real backend. Later this can show Bear online, viewer count, and live drawing sync.
+          </p>
         </div>
       </div>
     </section>

@@ -18,6 +18,9 @@ const adminModeLabelEl = document.getElementById("admin-mode-label");
 const adminModeButtons = document.querySelectorAll(".admin-mode-button");
 const burstConfettiBtn = document.getElementById("burst-confetti");
 const resetPartyBtn = document.getElementById("reset-party");
+const multiplayerStatusEl = document.getElementById("multiplayer-status");
+const multiplayerNoteEl = document.getElementById("multiplayer-note");
+const realtimePreviewEl = document.getElementById("realtime-preview");
 
 const brushToolBtn = document.getElementById("brush-tool");
 const eraserToolBtn = document.getElementById("eraser-tool");
@@ -55,7 +58,13 @@ const state = {
   background: backgroundPicker.value,
   isDrawing: false,
   lastPoint: null,
-  strokeCount: 0
+  strokeCount: 0,
+  multiplayer: {
+    bearOnline: false,
+    liveViewers: 0,
+    sharedMode: "normal",
+    lastSharedStroke: null
+  }
 };
 
 const loadingSteps = [
@@ -94,6 +103,30 @@ function setLoadingState(step) {
   loadingProgressBarEl.style.width = `${step.percent}%`;
   loadingPercentEl.textContent = `${step.percent}%`;
   loadingPhaseEl.textContent = step.phase;
+}
+
+function updateMultiplayerPreview() {
+  if (!multiplayerStatusEl || !multiplayerNoteEl || !realtimePreviewEl) {
+    return;
+  }
+
+  multiplayerStatusEl.textContent = state.multiplayer.bearOnline ? "Bear is online" : "Bear is offline";
+  multiplayerNoteEl.textContent = state.multiplayer.bearOnline
+    ? "A future backend could let everyone watch Bear draw live right now."
+    : "This site is ready for live online status, shared powers, and live drawing later.";
+
+  realtimePreviewEl.textContent = state.multiplayer.bearOnline
+    ? `Future realtime state: ${state.multiplayer.liveViewers} viewers, shared mode ${state.multiplayer.sharedMode}.`
+    : "Waiting for a real backend. Later this can show Bear online, viewer count, and live drawing sync.";
+}
+
+function syncFutureRealtimeState(patch) {
+  state.multiplayer = {
+    ...state.multiplayer,
+    ...patch
+  };
+
+  updateMultiplayerPreview();
 }
 
 function runLoadingSequence() {
@@ -187,6 +220,10 @@ function applyAdminMode(mode) {
     brushSize.value = "36";
     updateBrushLabel();
   }
+
+  syncFutureRealtimeState({
+    sharedMode: mode
+  });
 }
 
 function openAdminPanel() {
@@ -566,6 +603,9 @@ closeAdminBtn.addEventListener("click", closeAdminPanel);
 claimOwnerAccessBtn.addEventListener("click", () => {
   window.localStorage.setItem(OWNER_STORAGE_KEY, "true");
   unlockAdminAccess();
+  syncFutureRealtimeState({
+    bearOnline: true
+  });
   statusMessageEl.textContent = "Bear controls unlocked on this browser.";
 });
 copyPermissionLinkBtn.addEventListener("click", copyPermissionLink);
@@ -666,5 +706,6 @@ updateToolUI();
 updateMirrorUI();
 updateAdminAccessUI();
 updateAdminModeUI();
+updateMultiplayerPreview();
 resizeCanvas();
 runLoadingSequence();
