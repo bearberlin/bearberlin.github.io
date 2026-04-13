@@ -7,14 +7,24 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=20260413-2005">
+  <link rel="stylesheet" href="./styles.css?v=20260413-2025">
 </head>
 <body>
   <main class="home-shell">
     <section class="home-hero panel">
       <p class="eyebrow">Bear Berlin</p>
-      <button id="open-kingsamalot" class="home-55-badge" type="button">55</button>
-      <div class="thumbs-hero" aria-label="Thumbs up">👍</div>
+      <div class="muga-hero" aria-label="Muga sitting">
+        <div class="muga-sitter muga-sitter--hero" aria-hidden="true">
+          <div class="muga-sitter__halo"></div>
+          <div class="muga-sitter__head"></div>
+          <div class="muga-sitter__body"></div>
+          <div class="muga-sitter__leg muga-sitter__leg--left"></div>
+          <div class="muga-sitter__leg muga-sitter__leg--right"></div>
+          <div class="muga-sitter__arm muga-sitter__arm--left"></div>
+          <div class="muga-sitter__arm muga-sitter__arm--right"></div>
+          <div class="muga-sitter__shadow"></div>
+        </div>
+      </div>
       <div class="home-song-box">
         <p class="section-label">Intro Song</p>
         <strong id="home-song-line">So just draw me...</strong>
@@ -24,17 +34,6 @@
       <div class="home-actions">
         <a class="home-button primary" href="./drawing/">Play My Drawing App</a>
         <a class="home-button secondary" href="#about">About This Site</a>
-      </div>
-
-      <div class="muga-sitter" aria-hidden="true">
-        <div class="muga-sitter__halo"></div>
-        <div class="muga-sitter__head"></div>
-        <div class="muga-sitter__body"></div>
-        <div class="muga-sitter__leg muga-sitter__leg--left"></div>
-        <div class="muga-sitter__leg muga-sitter__leg--right"></div>
-        <div class="muga-sitter__arm muga-sitter__arm--left"></div>
-        <div class="muga-sitter__arm muga-sitter__arm--right"></div>
-        <div class="muga-sitter__shadow"></div>
       </div>
     </section>
 
@@ -57,26 +56,6 @@
       </article>
     </section>
   </main>
-  <div id="kingsamalot-modal" class="image-modal is-hidden" aria-hidden="true">
-    <div class="image-modal__backdrop"></div>
-    <div class="image-modal__card panel" role="dialog" aria-modal="true" aria-label="KingSamaLot picture">
-      <button id="close-kingsamalot" class="text-button image-modal__close" type="button">Close</button>
-      <p class="section-label">KingSamaLot</p>
-      <div class="kingsamalot-card">
-        <div class="kingsamalot-portrait" aria-hidden="true">
-          <div class="kingsamalot-portrait__halo"></div>
-          <div class="kingsamalot-portrait__head"></div>
-          <div class="kingsamalot-portrait__crown"></div>
-          <div class="kingsamalot-portrait__body"></div>
-          <div class="kingsamalot-portrait__badge">55</div>
-        </div>
-        <div class="kingsamalot-copy">
-          <h2>KingSamaLot</h2>
-          <p>A static picture card for the intro page. No GIF, just the 55 king vibe.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-  <script src="./home.js?v=20260413-1945"></script>
+  <script src="./home.js?v=20260413-2025"></script>
 </body>
 </html>

@@ -390,32 +390,10 @@ button {
   line-height: 1.65;
 }
 
-.thumbs-hero {
+.muga-hero {
   display: grid;
   place-items: center;
   min-height: 15rem;
-  font-size: clamp(6rem, 20vw, 11rem);
-  line-height: 1;
-  text-shadow: 0 18px 35px rgba(20, 32, 51, 0.14);
-}
-
-.home-55-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  min-width: 5rem;
-  min-height: 5rem;
-  padding: 0.7rem 1.1rem;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #1530ff, #0f23bb);
-  color: #fff;
-  font-size: 2.15rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  box-shadow: 0 18px 36px rgba(21, 48, 255, 0.24);
-  border: 0;
-  cursor: pointer;
 }
 
 .home-song-box {
@@ -435,6 +413,56 @@ button {
   width: 11.5rem;
   height: 9.5rem;
   margin: 1rem 0 0 auto;
+}
+
+.muga-sitter--hero {
+  width: 16rem;
+  height: 13rem;
+  margin: 0;
+}
+
+.muga-sitter--hero .muga-sitter__head {
+  width: 5.2rem;
+  height: 5.2rem;
+  top: 0.7rem;
+}
+
+.muga-sitter--hero .muga-sitter__body {
+  top: 4.6rem;
+  width: 6.4rem;
+  height: 4.4rem;
+}
+
+.muga-sitter--hero .muga-sitter__leg {
+  top: 7.5rem;
+  width: 2.5rem;
+  height: 3.3rem;
+}
+
+.muga-sitter--hero .muga-sitter__leg--left {
+  left: 4.6rem;
+}
+
+.muga-sitter--hero .muga-sitter__leg--right {
+  right: 4.6rem;
+}
+
+.muga-sitter--hero .muga-sitter__arm {
+  top: 5.2rem;
+  width: 1.7rem;
+  height: 3.4rem;
+}
+
+.muga-sitter--hero .muga-sitter__arm--left {
+  left: 3.8rem;
+}
+
+.muga-sitter--hero .muga-sitter__arm--right {
+  right: 3.8rem;
+}
+
+.muga-sitter--hero .muga-sitter__shadow {
+  width: 8rem;
 }
 
 .muga-sitter__halo {
@@ -515,128 +543,6 @@ button {
   border-radius: 999px;
   background: rgba(20, 32, 51, 0.12);
   filter: blur(4px);
-}
-
-.image-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display: grid;
-  place-items: center;
-  padding: 1rem;
-}
-
-.image-modal.is-hidden {
-  display: none;
-}
-
-.image-modal__backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(20, 32, 51, 0.58);
-  backdrop-filter: blur(8px);
-}
-
-.image-modal__card {
-  position: relative;
-  width: min(100%, 38rem);
-  padding: 1rem;
-}
-
-.image-modal__close {
-  display: block;
-  margin-left: auto;
-}
-
-.kingsamalot-card {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 1rem;
-  align-items: center;
-  margin-top: 0.75rem;
-  padding: 1.2rem;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at top right, rgba(245, 196, 0, 0.22), transparent 30%),
-    linear-gradient(180deg, rgba(21, 48, 255, 0.96), rgba(15, 35, 187, 0.96));
-  color: #fff;
-}
-
-.kingsamalot-portrait {
-  position: relative;
-  width: 11rem;
-  height: 11rem;
-}
-
-.kingsamalot-portrait__halo {
-  position: absolute;
-  inset: 0.7rem;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.02));
-}
-
-.kingsamalot-portrait__head {
-  position: absolute;
-  top: 2.4rem;
-  left: 50%;
-  width: 4.1rem;
-  height: 4.1rem;
-  transform: translateX(-50%);
-  border-radius: 999px;
-  background: linear-gradient(180deg, #ffe0b8, #f2b785);
-  box-shadow: 0 0.45rem 0 rgba(15, 35, 187, 0.18);
-}
-
-.kingsamalot-portrait__crown {
-  position: absolute;
-  top: 1rem;
-  left: 50%;
-  width: 5.5rem;
-  height: 2.7rem;
-  transform: translateX(-50%);
-  clip-path: polygon(0 100%, 10% 40%, 26% 75%, 42% 18%, 58% 75%, 74% 40%, 90% 75%, 100% 100%);
-  background: linear-gradient(180deg, #ffd75c, #f5a900);
-  box-shadow: 0 0.35rem 0 rgba(15, 35, 187, 0.16);
-}
-
-.kingsamalot-portrait__body {
-  position: absolute;
-  left: 50%;
-  bottom: 1.1rem;
-  width: 6.2rem;
-  height: 4.5rem;
-  transform: translateX(-50%);
-  border-radius: 2.2rem 2.2rem 1.4rem 1.4rem;
-  background: linear-gradient(180deg, #ffffff, #dce7ff);
-}
-
-.kingsamalot-portrait__badge {
-  display: grid;
-  place-items: center;
-  position: absolute;
-  right: 0.2rem;
-  bottom: 0.3rem;
-  width: 4.2rem;
-  height: 4.2rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  font-size: 1.7rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
-}
-
-.kingsamalot-copy h2 {
-  margin: 0;
-  font-family: "Instrument Serif", serif;
-  font-size: clamp(2rem, 5vw, 2.8rem);
-  font-weight: 400;
-}
-
-.kingsamalot-copy p {
-  margin: 0.45rem 0 0;
-  color: rgba(255, 255, 255, 0.84);
-  line-height: 1.5;
 }
 
 .home-song-box strong {

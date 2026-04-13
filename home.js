@@ -1,8 +1,5 @@
 const playIntroSongBtn = document.getElementById("play-intro-song");
 const homeSongLineEl = document.getElementById("home-song-line");
-const openKingSamaLotBtn = document.getElementById("open-kingsamalot");
-const closeKingSamaLotBtn = document.getElementById("close-kingsamalot");
-const kingSamaLotModalEl = document.getElementById("kingsamalot-modal");
 
 const introSongLines = [
   "So just draw me",
@@ -143,48 +140,9 @@ function tryAutoplayIntroSong() {
   playIntroSong();
 }
 
-function openKingSamaLotModal() {
-  if (!kingSamaLotModalEl) {
-    return;
-  }
-
-  kingSamaLotModalEl.classList.remove("is-hidden");
-  kingSamaLotModalEl.setAttribute("aria-hidden", "false");
-}
-
-function closeKingSamaLotModal() {
-  if (!kingSamaLotModalEl) {
-    return;
-  }
-
-  kingSamaLotModalEl.classList.add("is-hidden");
-  kingSamaLotModalEl.setAttribute("aria-hidden", "true");
-}
-
 if (playIntroSongBtn) {
   playIntroSongBtn.addEventListener("click", playIntroSong);
 }
 
-if (openKingSamaLotBtn) {
-  openKingSamaLotBtn.addEventListener("click", openKingSamaLotModal);
-}
-
-if (closeKingSamaLotBtn) {
-  closeKingSamaLotBtn.addEventListener("click", closeKingSamaLotModal);
-}
-
-if (kingSamaLotModalEl) {
-  kingSamaLotModalEl.addEventListener("click", (event) => {
-    if (event.target === kingSamaLotModalEl || event.target.classList.contains("image-modal__backdrop")) {
-      closeKingSamaLotModal();
-    }
-  });
-}
-
 window.addEventListener("pointerdown", tryAutoplayIntroSong, { once: true });
 window.addEventListener("keydown", tryAutoplayIntroSong, { once: true });
-window.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") {
-    closeKingSamaLotModal();
-  }
-});
