@@ -7,13 +7,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=20260413-1810">
+  <link rel="stylesheet" href="./styles.css?v=20260413-1845">
 </head>
 <body>
   <main class="home-shell">
     <section class="home-hero panel">
       <p class="eyebrow">Bear Berlin</p>
-      <div class="home-55-badge">55</div>
+      <button id="open-kingsamalot" class="home-55-badge" type="button">55</button>
       <div class="thumbs-hero" aria-label="Thumbs up">👍</div>
       <div class="home-song-box">
         <p class="section-label">Intro Song</p>
@@ -46,6 +46,18 @@
       </article>
     </section>
   </main>
-  <script src="./home.js?v=20260413-1810"></script>
+  <div id="kingsamalot-modal" class="image-modal is-hidden" aria-hidden="true">
+    <div class="image-modal__backdrop"></div>
+    <div class="image-modal__card panel" role="dialog" aria-modal="true" aria-label="KingSamaLot picture">
+      <button id="close-kingsamalot" class="text-button image-modal__close" type="button">Close</button>
+      <p class="section-label">KingSamaLot</p>
+      <img
+        class="image-modal__image"
+        src="https://media1.tenor.com/m/XpZ3ShF7vfIAAAAd/kingsammelot-kingsammelot-jam.gif"
+        alt="KingSamaLot GIF"
+      >
+    </div>
+  </div>
+  <script src="./home.js?v=20260413-1845"></script>
 </body>
 </html>

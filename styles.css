@@ -414,6 +414,8 @@ button {
   font-weight: 800;
   letter-spacing: 0.1em;
   box-shadow: 0 18px 36px rgba(21, 48, 255, 0.24);
+  border: 0;
+  cursor: pointer;
 }
 
 .home-song-box {
@@ -426,6 +428,44 @@ button {
   background:
     linear-gradient(180deg, rgba(255, 246, 222, 0.92), rgba(227, 244, 255, 0.92));
   box-shadow: 0 16px 35px rgba(20, 32, 51, 0.08);
+}
+
+.image-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.image-modal.is-hidden {
+  display: none;
+}
+
+.image-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 32, 51, 0.58);
+  backdrop-filter: blur(8px);
+}
+
+.image-modal__card {
+  position: relative;
+  width: min(100%, 38rem);
+  padding: 1rem;
+}
+
+.image-modal__close {
+  display: block;
+  margin-left: auto;
+}
+
+.image-modal__image {
+  display: block;
+  width: 100%;
+  margin-top: 0.7rem;
+  border-radius: 20px;
 }
 
 .home-song-box strong {
