@@ -410,8 +410,8 @@ button {
 
 .muga-gif {
   width: min(100%, 18rem);
-  height: 18rem;
-  border: 0;
+  height: auto;
+  display: block;
   border-radius: 28px;
   box-shadow: 0 20px 40px rgba(20, 32, 51, 0.12);
   background: rgba(255, 255, 255, 0.78);
