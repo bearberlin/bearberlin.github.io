@@ -414,10 +414,31 @@ button {
 .home-song-box strong {
   font-size: clamp(1.2rem, 3vw, 1.8rem);
   line-height: 1.2;
+  transition: transform 220ms ease, text-shadow 220ms ease, color 220ms ease;
+}
+
+.home-song-box strong.is-singing {
+  color: #ff5f36;
+  transform: translateY(-1px) scale(1.02);
+  text-shadow:
+    0 0 14px rgba(255, 95, 54, 0.22),
+    0 10px 24px rgba(21, 48, 255, 0.12);
+  animation: home-song-pulse 1.2s ease-in-out infinite;
 }
 
 .home-song-button {
   justify-self: start;
+}
+
+@keyframes home-song-pulse {
+  0%,
+  100% {
+    transform: translateY(-1px) scale(1.02);
+  }
+
+  50% {
+    transform: translateY(-3px) scale(1.05);
+  }
 }
 
 .home-actions {
