@@ -399,6 +399,27 @@ button {
   text-shadow: 0 18px 35px rgba(20, 32, 51, 0.14);
 }
 
+.home-song-box {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(20, 32, 51, 0.12);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 246, 222, 0.92), rgba(227, 244, 255, 0.92));
+  box-shadow: 0 16px 35px rgba(20, 32, 51, 0.08);
+}
+
+.home-song-box strong {
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  line-height: 1.2;
+}
+
+.home-song-button {
+  justify-self: start;
+}
+
 .home-actions {
   display: flex;
   gap: 0.8rem;
