@@ -1,5 +1,5 @@
 const playIntroSongBtn = document.getElementById("play-intro-song");
-const copyRandomScreamBtn = document.getElementById("copy-random-scream");
+const copyCaboomLinkBtn = document.getElementById("copy-caboom-link");
 const homeSongLineEl = document.getElementById("home-song-line");
 const screamStatusEl = document.getElementById("scream-status");
 
@@ -29,22 +29,9 @@ const noteFrequencies = {
   C6: 1046.5
 };
 
-const screamPhrases = [
-  "AAAAA!",
-  "EEEEEK!",
-  "WAAAH!",
-  "BEEEE!",
-  "SKREEEE!",
-  "AHHHHH!",
-  "YOWWW!",
-  "haaaahaaaaaahaaaaaahhaaaaaahhaaaaaahaaaaaa",
-  "heheheha",
-  "rabledabeldooo"
-];
-
 let introSongStarted = false;
 let introSongActive = false;
-let screamPlayed = false;
+let caboomPlayed = false;
 let audioContext = null;
 
 function setHomeSongLine(line) {
@@ -124,10 +111,10 @@ function playLovelyChord(noteNames, startTime) {
   });
 }
 
-function playScreamSound(screamText) {
+function playCaboomSound() {
   const context = getAudioContext();
   if (!context) {
-    setHomeSongLine(screamText);
+    setHomeSongLine("CABOOM!");
     return;
   }
 
@@ -136,65 +123,72 @@ function playScreamSound(screamText) {
   }
 
   const startTime = context.currentTime + 0.02;
-  const frequencies = [880, 740, 980, 660, 1120];
+  const boomGain = context.createGain();
+  boomGain.gain.setValueAtTime(0.0001, startTime);
+  boomGain.gain.linearRampToValueAtTime(0.22, startTime + 0.03);
+  boomGain.gain.exponentialRampToValueAtTime(0.0001, startTime + 1.1);
+  boomGain.connect(context.destination);
 
-  frequencies.forEach((frequency, index) => {
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    oscillator.type = index % 2 === 0 ? "sawtooth" : "square";
-    oscillator.frequency.setValueAtTime(frequency, startTime + index * 0.06);
-    oscillator.frequency.exponentialRampToValueAtTime(Math.max(220, frequency * 0.45), startTime + 0.48 + index * 0.02);
-    gain.gain.setValueAtTime(0.0001, startTime + index * 0.04);
-    gain.gain.linearRampToValueAtTime(0.08, startTime + 0.05 + index * 0.04);
-    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.6);
-    oscillator.connect(gain);
-    gain.connect(context.destination);
-    oscillator.start(startTime + index * 0.04);
-    oscillator.stop(startTime + 0.62);
-  });
+  const boomOscillator = context.createOscillator();
+  boomOscillator.type = "sawtooth";
+  boomOscillator.frequency.setValueAtTime(110, startTime);
+  boomOscillator.frequency.exponentialRampToValueAtTime(42, startTime + 0.75);
+  boomOscillator.connect(boomGain);
+  boomOscillator.start(startTime);
+  boomOscillator.stop(startTime + 1.1);
+
+  const crackGain = context.createGain();
+  crackGain.gain.setValueAtTime(0.0001, startTime);
+  crackGain.gain.linearRampToValueAtTime(0.16, startTime + 0.015);
+  crackGain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.35);
+  crackGain.connect(context.destination);
+
+  const crackOscillator = context.createOscillator();
+  crackOscillator.type = "square";
+  crackOscillator.frequency.setValueAtTime(420, startTime);
+  crackOscillator.frequency.exponentialRampToValueAtTime(120, startTime + 0.28);
+  crackOscillator.connect(crackGain);
+  crackOscillator.start(startTime);
+  crackOscillator.stop(startTime + 0.35);
 
   setSongPlayingState(true);
-  setHomeSongLine(screamText);
+  setHomeSongLine("CABOOM!");
   window.setTimeout(() => {
     setSongPlayingState(false);
     setHomeSongLine("So just draw me...");
-  }, 850);
+  }, 1100);
 }
 
-function getRandomScreamPhrase() {
-  return screamPhrases[Math.floor(Math.random() * screamPhrases.length)];
-}
-
-function buildRandomScreamLink() {
+function buildCaboomLink() {
   const url = new URL(window.location.href);
-  url.searchParams.set("scream", getRandomScreamPhrase());
+  url.searchParams.set("caboom", "1");
   return url.toString();
 }
 
-async function copyRandomScreamLink() {
-  const screamLink = buildRandomScreamLink();
+async function copyCaboomLink() {
+  const screamLink = buildCaboomLink();
 
   try {
     await navigator.clipboard.writeText(screamLink);
-    setScreamStatus("Random scream link copied.");
+    setScreamStatus("Caboom link copied.");
   } catch (error) {
-    setScreamStatus("Copy failed, but the scream link is ready in this page URL.");
+    setScreamStatus("Copy failed, but the caboom link is ready in this page URL.");
   }
 }
 
-function maybePlaySharedScream() {
-  if (screamPlayed) {
+function maybePlaySharedCaboom() {
+  if (caboomPlayed) {
     return;
   }
 
-  const screamText = new URLSearchParams(window.location.search).get("scream");
-  if (!screamText) {
+  const hasCaboom = new URLSearchParams(window.location.search).get("caboom") === "1";
+  if (!hasCaboom) {
     return;
   }
 
-  screamPlayed = true;
-  setScreamStatus(`Shared scream loaded: ${screamText}`);
-  playScreamSound(String(screamText).slice(0, 24));
+  caboomPlayed = true;
+  setScreamStatus("Shared caboom loaded.");
+  playCaboomSound();
 }
 
 function playIntroSong() {
@@ -241,17 +235,17 @@ if (playIntroSongBtn) {
   playIntroSongBtn.addEventListener("click", playIntroSong);
 }
 
-if (copyRandomScreamBtn) {
-  copyRandomScreamBtn.addEventListener("click", copyRandomScreamLink);
+if (copyCaboomLinkBtn) {
+  copyCaboomLinkBtn.addEventListener("click", copyCaboomLink);
 }
 
 window.addEventListener("pointerdown", () => {
-  maybePlaySharedScream();
+  maybePlaySharedCaboom();
   tryAutoplayIntroSong();
 }, { once: true });
 window.addEventListener("keydown", () => {
-  maybePlaySharedScream();
+  maybePlaySharedCaboom();
   tryAutoplayIntroSong();
 }, { once: true });
 
-maybePlaySharedScream();
+maybePlaySharedCaboom();
