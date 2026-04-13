@@ -36,7 +36,8 @@ const screamPhrases = [
   "BEEEE!",
   "SKREEEE!",
   "AHHHHH!",
-  "YOWWW!"
+  "YOWWW!",
+  "haaaahaaaaaahaaaaaahhaaaaaahhaaaaaahaaaaaa"
 ];
 
 let introSongStarted = false;
