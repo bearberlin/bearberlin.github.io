@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../styles.css?v=20260410-1320">
+  <link rel="stylesheet" href="../styles.css?v=20260413-1415">
 </head>
 <body>
   <div id="confetti-layer" class="confetti-layer" aria-hidden="true"></div>
@@ -74,6 +74,7 @@
       <span class="section-label">Challenge Mode</span>
       <strong id="challenge-category">Waiting for Bear to start a challenge</strong>
       <p id="challenge-note" class="player-counter-note">When Bear starts one, everyone can try drawing the same thing.</p>
+      <p id="challenge-spots" class="player-counter-note">No challenge spots are open right now.</p>
       <p id="challenge-winner" class="challenge-winner is-hidden"></p>
       <button id="submit-challenge" class="action-button primary challenge-submit-button" type="button" disabled>Submit My Drawing</button>
     </section>
@@ -180,6 +181,8 @@
           <span class="section-label">Challenge Judge</span>
           <p id="challenge-admin-status" class="admin-copy">No challenge is running right now.</p>
           <p id="challenge-submission-count" class="admin-copy">0 drawings submitted</p>
+          <label class="section-label" for="challenge-limit-input">Submission Limit</label>
+          <input id="challenge-limit-input" class="admin-link-input" type="number" min="1" max="50" value="8">
           <p id="challenge-selected-player" class="admin-copy">No drawing selected yet.</p>
           <img id="challenge-preview-image" class="challenge-preview-image is-hidden" alt="Selected challenge drawing preview">
           <div class="admin-mode-grid admin-action-grid">
@@ -319,6 +322,6 @@
       measurementId: "G-JGCRDHMJQK"
     };
   </script>
-  <script src="../script.js?v=20260410-1320"></script>
+  <script src="../script.js?v=20260413-1415"></script>
 </body>
 </html>

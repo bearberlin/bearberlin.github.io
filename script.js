@@ -57,6 +57,7 @@ const globalBannerTextEl = document.getElementById("global-banner-text");
 const challengePanelEl = document.getElementById("challenge-panel");
 const challengeCategoryEl = document.getElementById("challenge-category");
 const challengeNoteEl = document.getElementById("challenge-note");
+const challengeSpotsEl = document.getElementById("challenge-spots");
 const challengeWinnerEl = document.getElementById("challenge-winner");
 const submitChallengeBtn = document.getElementById("submit-challenge");
 const gameTextOverlayEl = document.getElementById("game-text-overlay");
@@ -70,6 +71,7 @@ const startWatchModeBtn = document.getElementById("start-watch-mode");
 const stopWatchModeBtn = document.getElementById("stop-watch-mode");
 const challengeAdminStatusEl = document.getElementById("challenge-admin-status");
 const challengeSubmissionCountEl = document.getElementById("challenge-submission-count");
+const challengeLimitInputEl = document.getElementById("challenge-limit-input");
 const challengeSelectedPlayerEl = document.getElementById("challenge-selected-player");
 const challengePreviewImageEl = document.getElementById("challenge-preview-image");
 const startChallengeBtn = document.getElementById("start-challenge");
@@ -381,6 +383,11 @@ function getPlayerName() {
 function updateChallengeUI() {
   const activeChallenge = state.challenge && state.challenge.active ? state.challenge : null;
   const hasActiveChallenge = Boolean(activeChallenge);
+  const maxEntries = Number(activeChallenge?.maxEntries) || 0;
+  const entryCount = state.challengeSubmissions.length;
+  const alreadySubmitted = state.challengeSubmissions.some((entry) => entry.sessionId === sessionId);
+  const spotsLeft = Math.max(0, maxEntries - entryCount);
+  const isFull = hasActiveChallenge && maxEntries > 0 && spotsLeft < 1;
 
   if (challengeCategoryEl) {
     challengeCategoryEl.textContent = hasActiveChallenge
@@ -394,8 +401,24 @@ function updateChallengeUI() {
       : "When Bear starts one, everyone can try drawing the same thing.";
   }
 
+  if (challengeSpotsEl) {
+    if (!hasActiveChallenge) {
+      challengeSpotsEl.textContent = "No challenge spots are open right now.";
+    } else if (alreadySubmitted) {
+      challengeSpotsEl.textContent = maxEntries > 0
+        ? `You already made it in. ${entryCount} of ${maxEntries} spots are taken.`
+        : "You already submitted your drawing.";
+    } else if (maxEntries > 0) {
+      challengeSpotsEl.textContent = spotsLeft === 1
+        ? "1 spot left in this challenge."
+        : `${spotsLeft} spots left in this challenge.`;
+    } else {
+      challengeSpotsEl.textContent = `${entryCount} drawings submitted so far.`;
+    }
+  }
+
   if (submitChallengeBtn) {
-    submitChallengeBtn.disabled = !hasActiveChallenge;
+    submitChallengeBtn.disabled = !hasActiveChallenge || (isFull && !alreadySubmitted);
   }
 
   const winner = state.challengeWinner;
@@ -424,12 +447,19 @@ function updateChallengeAdminUI() {
   }
 
   const activeChallenge = state.challenge && state.challenge.active ? state.challenge : null;
+  const maxEntries = Number(activeChallenge?.maxEntries) || 0;
   challengeAdminStatusEl.textContent = activeChallenge
     ? `Current category: ${activeChallenge.category}`
     : "No challenge is running right now.";
 
   const count = state.challengeSubmissions.length;
-  challengeSubmissionCountEl.textContent = count === 1 ? "1 drawing submitted" : `${count} drawings submitted`;
+  challengeSubmissionCountEl.textContent = activeChallenge && maxEntries > 0
+    ? `${count} of ${maxEntries} drawings submitted`
+    : (count === 1 ? "1 drawing submitted" : `${count} drawings submitted`);
+
+  if (challengeLimitInputEl) {
+    challengeLimitInputEl.disabled = Boolean(activeChallenge);
+  }
 
   const selectedSubmission = getSelectedChallengeSubmission();
   if (!selectedSubmission) {
@@ -782,9 +812,11 @@ function startRandomChallenge() {
   }
 
   const category = challengeCategories[Math.floor(Math.random() * challengeCategories.length)];
+  const maxEntries = Math.max(1, Math.min(50, Number(challengeLimitInputEl?.value) || 8));
   const payload = {
     id: `challenge-${Date.now()}`,
     category,
+    maxEntries,
     active: true,
     createdAt: Date.now(),
     createdBy: "bear"
@@ -803,7 +835,7 @@ function startRandomChallenge() {
       state.selectedSubmissionIndex = 0;
       updateChallengeUI();
       updateChallengeAdminUI();
-      statusMessageEl.textContent = `Challenge started: draw ${category}.`;
+      statusMessageEl.textContent = `Challenge started: draw ${category}. ${maxEntries} spots open.`;
     })
     .catch(() => {
       statusMessageEl.textContent = "Challenge could not start.";
@@ -875,6 +907,13 @@ function submitChallengeDrawing() {
   const activeChallenge = state.challenge && state.challenge.active ? state.challenge : null;
   if (!activeChallenge) {
     statusMessageEl.textContent = "Wait for Bear to start a challenge.";
+    return;
+  }
+
+  const alreadySubmitted = state.challengeSubmissions.some((entry) => entry.sessionId === sessionId);
+  const maxEntries = Number(activeChallenge.maxEntries) || 0;
+  if (!alreadySubmitted && maxEntries > 0 && state.challengeSubmissions.length >= maxEntries) {
+    statusMessageEl.textContent = "This challenge is full already.";
     return;
   }
 
