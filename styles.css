@@ -430,6 +430,93 @@ button {
   box-shadow: 0 16px 35px rgba(20, 32, 51, 0.08);
 }
 
+.muga-sitter {
+  position: relative;
+  width: 11.5rem;
+  height: 9.5rem;
+  margin: 1rem 0 0 auto;
+}
+
+.muga-sitter__halo {
+  position: absolute;
+  inset: 0.8rem 1.2rem 1.1rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 196, 0, 0.22), rgba(255, 196, 0, 0));
+}
+
+.muga-sitter__head {
+  position: absolute;
+  top: 0.8rem;
+  left: 50%;
+  width: 3.8rem;
+  height: 3.8rem;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffdcb6, #f3b27c);
+  box-shadow: 0 0.35rem 0 rgba(20, 32, 51, 0.09);
+}
+
+.muga-sitter__body {
+  position: absolute;
+  left: 50%;
+  top: 3.5rem;
+  width: 4.8rem;
+  height: 3.3rem;
+  transform: translateX(-50%);
+  border-radius: 1.8rem 1.8rem 1.4rem 1.4rem;
+  background: linear-gradient(180deg, #ff5f36, #d94a2f);
+}
+
+.muga-sitter__leg {
+  position: absolute;
+  top: 5.9rem;
+  width: 2rem;
+  height: 2.6rem;
+  border-radius: 1.1rem;
+  background: linear-gradient(180deg, #2846ff, #1530ff);
+}
+
+.muga-sitter__leg--left {
+  left: 3.5rem;
+  transform: rotate(24deg);
+}
+
+.muga-sitter__leg--right {
+  right: 3.5rem;
+  transform: rotate(-24deg);
+}
+
+.muga-sitter__arm {
+  position: absolute;
+  top: 4rem;
+  width: 1.4rem;
+  height: 2.8rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffdcb6, #f3b27c);
+}
+
+.muga-sitter__arm--left {
+  left: 2.9rem;
+  transform: rotate(28deg);
+}
+
+.muga-sitter__arm--right {
+  right: 2.9rem;
+  transform: rotate(-28deg);
+}
+
+.muga-sitter__shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 0.4rem;
+  width: 6.6rem;
+  height: 1rem;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(20, 32, 51, 0.12);
+  filter: blur(4px);
+}
+
 .image-modal {
   position: fixed;
   inset: 0;
