@@ -9,9 +9,27 @@ const introSongLines = [
   "So just draw me"
 ];
 
+const introSongMelody = [
+  ["C5", "E5", "G5", "E5"],
+  ["B4", "D5", "G5", "D5"],
+  ["C5", "E5", "A5", "E5"],
+  ["B4", "D5", "G5", "D5"],
+  ["C5", "E5", "G5", "C6"]
+];
+
+const noteFrequencies = {
+  B4: 493.88,
+  C5: 523.25,
+  D5: 587.33,
+  E5: 659.25,
+  G5: 783.99,
+  A5: 880,
+  C6: 1046.5
+};
+
 let introSongStarted = false;
 let introSongActive = false;
-let preferredIntroVoice = null;
+let audioContext = null;
 
 function setHomeSongLine(line) {
   if (!homeSongLineEl) {
@@ -29,43 +47,57 @@ function setSongPlayingState(isPlaying) {
   homeSongLineEl.classList.toggle("is-singing", isPlaying);
 }
 
-function pickLovelyVoice() {
-  if (!("speechSynthesis" in window)) {
+function getAudioContext() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) {
     return null;
   }
 
-  const voices = window.speechSynthesis.getVoices();
-  if (!voices.length) {
-    return null;
+  if (!audioContext) {
+    audioContext = new AudioContextClass();
   }
 
-  const lovelyVoice = voices.find((voice) => {
-    const name = `${voice.name} ${voice.lang}`.toLowerCase();
-    return name.includes("samantha")
-      || name.includes("victoria")
-      || name.includes("zira")
-      || name.includes("ava")
-      || name.includes("allison");
-  });
-
-  return lovelyVoice || voices.find((voice) => String(voice.lang || "").toLowerCase().startsWith("en")) || voices[0];
+  return audioContext;
 }
 
-function singLine(line, delay) {
-  window.setTimeout(() => {
-    setHomeSongLine(line);
+function playLovelyNote(frequency, startTime, duration, gainBoost = 1) {
+  const context = getAudioContext();
+  if (!context || !frequency) {
+    return;
+  }
 
-    if (!("speechSynthesis" in window)) {
-      return;
-    }
+  const masterGain = context.createGain();
+  masterGain.gain.setValueAtTime(0.0001, startTime);
+  masterGain.gain.linearRampToValueAtTime(0.14 * gainBoost, startTime + 0.05);
+  masterGain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  masterGain.connect(context.destination);
 
-    const utterance = new SpeechSynthesisUtterance(line);
-    utterance.rate = 0.84;
-    utterance.pitch = 1.25;
-    utterance.volume = 1;
-    utterance.voice = preferredIntroVoice || pickLovelyVoice();
-    window.speechSynthesis.speak(utterance);
-  }, delay);
+  const mainOscillator = context.createOscillator();
+  mainOscillator.type = "triangle";
+  mainOscillator.frequency.setValueAtTime(frequency, startTime);
+  mainOscillator.connect(masterGain);
+
+  const shimmerOscillator = context.createOscillator();
+  shimmerOscillator.type = "sine";
+  shimmerOscillator.frequency.setValueAtTime(frequency * 2, startTime);
+
+  const shimmerGain = context.createGain();
+  shimmerGain.gain.setValueAtTime(0.0001, startTime);
+  shimmerGain.gain.linearRampToValueAtTime(0.05 * gainBoost, startTime + 0.04);
+  shimmerGain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration * 0.9);
+  shimmerOscillator.connect(shimmerGain);
+  shimmerGain.connect(context.destination);
+
+  mainOscillator.start(startTime);
+  shimmerOscillator.start(startTime);
+  mainOscillator.stop(startTime + duration);
+  shimmerOscillator.stop(startTime + duration);
+}
+
+function playLovelyChord(noteNames, startTime) {
+  noteNames.forEach((noteName, index) => {
+    playLovelyNote(noteFrequencies[noteName], startTime + index * 0.18, 0.9, index === noteNames.length - 1 ? 1.15 : 1);
+  });
 }
 
 function playIntroSong() {
@@ -73,25 +105,31 @@ function playIntroSong() {
     return;
   }
 
+  const context = getAudioContext();
+  if (context && context.state === "suspended") {
+    context.resume();
+  }
+
   introSongStarted = true;
   introSongActive = true;
   setSongPlayingState(true);
 
-  if ("speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
-  }
-
-  preferredIntroVoice = pickLovelyVoice();
+  const startTime = context ? context.currentTime + 0.08 : 0;
 
   introSongLines.forEach((line, index) => {
-    singLine(line, index * 1450);
+    const lineDelay = index * 1.65;
+    window.setTimeout(() => {
+      setHomeSongLine(line);
+    }, lineDelay * 1000);
+
+    playLovelyChord(introSongMelody[index], startTime + lineDelay);
   });
 
   window.setTimeout(() => {
     introSongActive = false;
     setSongPlayingState(false);
     setHomeSongLine("So just draw me...");
-  }, introSongLines.length * 1450 + 650);
+  }, introSongLines.length * 1650 + 450);
 }
 
 function tryAutoplayIntroSong() {
@@ -104,13 +142,6 @@ function tryAutoplayIntroSong() {
 
 if (playIntroSongBtn) {
   playIntroSongBtn.addEventListener("click", playIntroSong);
-}
-
-if ("speechSynthesis" in window) {
-  window.speechSynthesis.addEventListener("voiceschanged", () => {
-    preferredIntroVoice = pickLovelyVoice();
-  });
-  preferredIntroVoice = pickLovelyVoice();
 }
 
 window.addEventListener("pointerdown", tryAutoplayIntroSong, { once: true });

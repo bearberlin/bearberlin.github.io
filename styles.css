@@ -418,12 +418,12 @@ button {
 }
 
 .home-song-box strong.is-singing {
-  color: #ff5f36;
+  color: #e26b48;
   transform: translateY(-1px) scale(1.02);
   text-shadow:
-    0 0 14px rgba(255, 95, 54, 0.22),
-    0 10px 24px rgba(21, 48, 255, 0.12);
-  animation: home-song-pulse 1.2s ease-in-out infinite;
+    0 0 18px rgba(255, 140, 109, 0.26),
+    0 10px 24px rgba(21, 48, 255, 0.1);
+  animation: home-song-pulse 1.6s ease-in-out infinite;
 }
 
 .home-song-button {
@@ -437,7 +437,7 @@ button {
   }
 
   50% {
-    transform: translateY(-3px) scale(1.05);
+    transform: translateY(-4px) scale(1.045);
   }
 }
 
