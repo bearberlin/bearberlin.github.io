@@ -1,5 +1,7 @@
 const playIntroSongBtn = document.getElementById("play-intro-song");
+const copyRandomScreamBtn = document.getElementById("copy-random-scream");
 const homeSongLineEl = document.getElementById("home-song-line");
+const screamStatusEl = document.getElementById("scream-status");
 
 const introSongLines = [
   "So just draw me",
@@ -27,8 +29,19 @@ const noteFrequencies = {
   C6: 1046.5
 };
 
+const screamPhrases = [
+  "AAAAA!",
+  "EEEEEK!",
+  "WAAAH!",
+  "BEEEE!",
+  "SKREEEE!",
+  "AHHHHH!",
+  "YOWWW!"
+];
+
 let introSongStarted = false;
 let introSongActive = false;
+let screamPlayed = false;
 let audioContext = null;
 
 function setHomeSongLine(line) {
@@ -45,6 +58,14 @@ function setSongPlayingState(isPlaying) {
   }
 
   homeSongLineEl.classList.toggle("is-singing", isPlaying);
+}
+
+function setScreamStatus(message) {
+  if (!screamStatusEl) {
+    return;
+  }
+
+  screamStatusEl.textContent = message;
 }
 
 function getAudioContext() {
@@ -100,6 +121,79 @@ function playLovelyChord(noteNames, startTime) {
   });
 }
 
+function playScreamSound(screamText) {
+  const context = getAudioContext();
+  if (!context) {
+    setHomeSongLine(screamText);
+    return;
+  }
+
+  if (context.state === "suspended") {
+    context.resume();
+  }
+
+  const startTime = context.currentTime + 0.02;
+  const frequencies = [880, 740, 980, 660, 1120];
+
+  frequencies.forEach((frequency, index) => {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = index % 2 === 0 ? "sawtooth" : "square";
+    oscillator.frequency.setValueAtTime(frequency, startTime + index * 0.06);
+    oscillator.frequency.exponentialRampToValueAtTime(Math.max(220, frequency * 0.45), startTime + 0.48 + index * 0.02);
+    gain.gain.setValueAtTime(0.0001, startTime + index * 0.04);
+    gain.gain.linearRampToValueAtTime(0.08, startTime + 0.05 + index * 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.6);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(startTime + index * 0.04);
+    oscillator.stop(startTime + 0.62);
+  });
+
+  setSongPlayingState(true);
+  setHomeSongLine(screamText);
+  window.setTimeout(() => {
+    setSongPlayingState(false);
+    setHomeSongLine("So just draw me...");
+  }, 850);
+}
+
+function getRandomScreamPhrase() {
+  return screamPhrases[Math.floor(Math.random() * screamPhrases.length)];
+}
+
+function buildRandomScreamLink() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("scream", getRandomScreamPhrase());
+  return url.toString();
+}
+
+async function copyRandomScreamLink() {
+  const screamLink = buildRandomScreamLink();
+
+  try {
+    await navigator.clipboard.writeText(screamLink);
+    setScreamStatus("Random scream link copied.");
+  } catch (error) {
+    setScreamStatus("Copy failed, but the scream link is ready in this page URL.");
+  }
+}
+
+function maybePlaySharedScream() {
+  if (screamPlayed) {
+    return;
+  }
+
+  const screamText = new URLSearchParams(window.location.search).get("scream");
+  if (!screamText) {
+    return;
+  }
+
+  screamPlayed = true;
+  setScreamStatus(`Shared scream loaded: ${screamText}`);
+  playScreamSound(String(screamText).slice(0, 24));
+}
+
 function playIntroSong() {
   if (introSongActive) {
     return;
@@ -144,5 +238,17 @@ if (playIntroSongBtn) {
   playIntroSongBtn.addEventListener("click", playIntroSong);
 }
 
-window.addEventListener("pointerdown", tryAutoplayIntroSong, { once: true });
-window.addEventListener("keydown", tryAutoplayIntroSong, { once: true });
+if (copyRandomScreamBtn) {
+  copyRandomScreamBtn.addEventListener("click", copyRandomScreamLink);
+}
+
+window.addEventListener("pointerdown", () => {
+  maybePlaySharedScream();
+  tryAutoplayIntroSong();
+}, { once: true });
+window.addEventListener("keydown", () => {
+  maybePlaySharedScream();
+  tryAutoplayIntroSong();
+}, { once: true });
+
+maybePlaySharedScream();
