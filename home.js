@@ -1,7 +1,5 @@
 const playIntroSongBtn = document.getElementById("play-intro-song");
-const copyCaboomLinkBtn = document.getElementById("copy-caboom-link");
 const homeSongLineEl = document.getElementById("home-song-line");
-const screamStatusEl = document.getElementById("scream-status");
 
 const introSongLines = [
   "So just draw me",
@@ -31,7 +29,6 @@ const noteFrequencies = {
 
 let introSongStarted = false;
 let introSongActive = false;
-let caboomPlayed = false;
 let audioContext = null;
 
 function setHomeSongLine(line) {
@@ -48,14 +45,6 @@ function setSongPlayingState(isPlaying) {
   }
 
   homeSongLineEl.classList.toggle("is-singing", isPlaying);
-}
-
-function setScreamStatus(message) {
-  if (!screamStatusEl) {
-    return;
-  }
-
-  screamStatusEl.textContent = message;
 }
 
 function getAudioContext() {
@@ -111,86 +100,6 @@ function playLovelyChord(noteNames, startTime) {
   });
 }
 
-function playCaboomSound() {
-  const context = getAudioContext();
-  if (!context) {
-    setHomeSongLine("CABOOM!");
-    return;
-  }
-
-  if (context.state === "suspended") {
-    context.resume();
-  }
-
-  const startTime = context.currentTime + 0.02;
-  const boomGain = context.createGain();
-  boomGain.gain.setValueAtTime(0.0001, startTime);
-  boomGain.gain.linearRampToValueAtTime(0.22, startTime + 0.03);
-  boomGain.gain.exponentialRampToValueAtTime(0.0001, startTime + 1.1);
-  boomGain.connect(context.destination);
-
-  const boomOscillator = context.createOscillator();
-  boomOscillator.type = "sawtooth";
-  boomOscillator.frequency.setValueAtTime(110, startTime);
-  boomOscillator.frequency.exponentialRampToValueAtTime(42, startTime + 0.75);
-  boomOscillator.connect(boomGain);
-  boomOscillator.start(startTime);
-  boomOscillator.stop(startTime + 1.1);
-
-  const crackGain = context.createGain();
-  crackGain.gain.setValueAtTime(0.0001, startTime);
-  crackGain.gain.linearRampToValueAtTime(0.16, startTime + 0.015);
-  crackGain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.35);
-  crackGain.connect(context.destination);
-
-  const crackOscillator = context.createOscillator();
-  crackOscillator.type = "square";
-  crackOscillator.frequency.setValueAtTime(420, startTime);
-  crackOscillator.frequency.exponentialRampToValueAtTime(120, startTime + 0.28);
-  crackOscillator.connect(crackGain);
-  crackOscillator.start(startTime);
-  crackOscillator.stop(startTime + 0.35);
-
-  setSongPlayingState(true);
-  setHomeSongLine("CABOOM!");
-  window.setTimeout(() => {
-    setSongPlayingState(false);
-    setHomeSongLine("So just draw me...");
-  }, 1100);
-}
-
-function buildCaboomLink() {
-  const url = new URL(window.location.href);
-  url.searchParams.set("caboom", "1");
-  return url.toString();
-}
-
-async function copyCaboomLink() {
-  const screamLink = buildCaboomLink();
-
-  try {
-    await navigator.clipboard.writeText(screamLink);
-    setScreamStatus("Caboom link copied.");
-  } catch (error) {
-    setScreamStatus("Copy failed, but the caboom link is ready in this page URL.");
-  }
-}
-
-function maybePlaySharedCaboom() {
-  if (caboomPlayed) {
-    return;
-  }
-
-  const hasCaboom = new URLSearchParams(window.location.search).get("caboom") === "1";
-  if (!hasCaboom) {
-    return;
-  }
-
-  caboomPlayed = true;
-  setScreamStatus("Shared caboom loaded.");
-  playCaboomSound();
-}
-
 function playIntroSong() {
   if (introSongActive) {
     return;
@@ -235,17 +144,5 @@ if (playIntroSongBtn) {
   playIntroSongBtn.addEventListener("click", playIntroSong);
 }
 
-if (copyCaboomLinkBtn) {
-  copyCaboomLinkBtn.addEventListener("click", copyCaboomLink);
-}
-
-window.addEventListener("pointerdown", () => {
-  maybePlaySharedCaboom();
-  tryAutoplayIntroSong();
-}, { once: true });
-window.addEventListener("keydown", () => {
-  maybePlaySharedCaboom();
-  tryAutoplayIntroSong();
-}, { once: true });
-
-maybePlaySharedCaboom();
+window.addEventListener("pointerdown", tryAutoplayIntroSong, { once: true });
+window.addEventListener("keydown", tryAutoplayIntroSong, { once: true });
