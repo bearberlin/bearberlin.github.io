@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Current</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css?v=20260413-1415">
+</head>
+<body>
+  <div id="confetti-layer" class="confetti-layer" aria-hidden="true"></div>
+
+  <div id="loading-screen" class="loading-screen" role="status" aria-live="polite" aria-label="Loading application">
+    <div class="loading-screen__backdrop"></div>
+    <div class="loading-card">
+      <p class="loading-kicker">Preparing The Studio</p>
+      <h2>Color Current</h2>
+      <p id="loading-message" class="loading-message">Warming up brushes and balancing the canvas.</p>
+
+      <div class="loading-orbital">
+        <span class="loading-orb core"></span>
+        <span class="loading-orb satellite satellite-a"></span>
+        <span class="loading-orb satellite satellite-b"></span>
+        <span class="loading-ring ring-a"></span>
+        <span class="loading-ring ring-b"></span>
+      </div>
+
+      <div class="loading-progress" aria-hidden="true">
+        <div id="loading-progress-bar" class="loading-progress__bar"></div>
+      </div>
+
+      <div class="loading-meta">
+        <span id="loading-percent">0%</span>
+        <span id="loading-phase">Starting</span>
+      </div>
+    </div>
+  </div>
+
+  <main class="app-shell">
+    <section class="hero panel">
+      <div>
+        <p class="eyebrow">Canvas Playground</p>
+        <h1>Color Current</h1>
+        <p class="intro">
+          Sketch, erase, flood the page with a new base color, and save your work as a PNG.
+          It is light, tactile, and ready to use right away.
+        </p>
+      </div>
+      <div class="hero-chip" id="tool-indicator">Brush mode</div>
+    </section>
+
+    <section class="player-counter-banner panel" aria-label="Player counter">
+      <span class="section-label">Player Counter</span>
+      <strong id="player-count">Coming soon</strong>
+      <p id="player-counter-note" class="player-counter-note">This will count everyone later.</p>
+      <button id="open-admin" class="action-button secondary player-counter-button is-hidden" type="button">Open Bear Controls</button>
+    </section>
+
+    <section class="multiplayer-banner panel" aria-label="Multiplayer status">
+      <span class="section-label">Multiplayer Future</span>
+      <strong id="multiplayer-status">Live status not connected</strong>
+      <p id="multiplayer-note" class="player-counter-note">Add a Firebase project later to make Bear online/offline real.</p>
+    </section>
+
+    <section id="global-banner" class="global-banner panel is-hidden" aria-live="polite">
+      <span class="section-label">Global Message</span>
+      <strong id="global-banner-title">Bear Broadcast</strong>
+      <p id="global-banner-text" class="player-counter-note"></p>
+    </section>
+
+    <section id="challenge-panel" class="challenge-panel panel" aria-live="polite">
+      <span class="section-label">Challenge Mode</span>
+      <strong id="challenge-category">Waiting for Bear to start a challenge</strong>
+      <p id="challenge-note" class="player-counter-note">When Bear starts one, everyone can try drawing the same thing.</p>
+      <p id="challenge-spots" class="player-counter-note">No challenge spots are open right now.</p>
+      <p id="challenge-winner" class="challenge-winner is-hidden"></p>
+      <button id="submit-challenge" class="action-button primary challenge-submit-button" type="button" disabled>Submit My Drawing</button>
+    </section>
+
+    <section id="admin-panel" class="admin-panel panel is-hidden" aria-label="Creator panel">
+      <div class="admin-panel__header">
+        <div>
+          <p class="section-label">Creator Panel</p>
+          <h2>Bear Controls</h2>
+        </div>
+        <button id="close-admin" class="text-button" type="button">Close</button>
+      </div>
+
+      <div id="admin-locked" class="admin-locked">
+        <p class="admin-copy">Press the button below if this is Bear's browser, or open a permission link Bear shared with you.</p>
+        <button id="claim-owner-access" class="action-button primary" type="button">This Is Bear's Browser</button>
+      </div>
+
+      <div id="admin-controls" class="admin-controls is-hidden">
+        <p id="admin-mode-label" class="admin-copy">Mode: Normal</p>
+        <div class="admin-mode-grid">
+          <button data-admin-mode="normal" class="tool-button admin-mode-button is-active" type="button">Normal</button>
+          <button data-admin-mode="disco" class="tool-button admin-mode-button" type="button">Disco</button>
+          <button data-admin-mode="confetti" class="tool-button admin-mode-button" type="button">Confetti</button>
+          <button data-admin-mode="blackout" class="tool-button admin-mode-button" type="button">Blackout</button>
+          <button data-admin-mode="rainbow" class="tool-button admin-mode-button" type="button">Rainbow</button>
+          <button data-admin-mode="giant" class="tool-button admin-mode-button" type="button">Giant Brush</button>
+          <button data-admin-mode="invert" class="tool-button admin-mode-button" type="button">Invert</button>
+          <button data-admin-mode="freeze" class="tool-button admin-mode-button" type="button">Freeze Draw</button>
+          <button data-admin-mode="spotlight" class="tool-button admin-mode-button" type="button">Spotlight</button>
+          <button data-admin-mode="lockcolor" class="tool-button admin-mode-button" type="button">Lock Colors</button>
+          <button data-admin-mode="mini" class="tool-button admin-mode-button" type="button">Mini Brush</button>
+          <button data-admin-mode="neon" class="tool-button admin-mode-button" type="button">Neon</button>
+          <button data-admin-mode="ghost" class="tool-button admin-mode-button" type="button">Ghost</button>
+          <button data-admin-mode="sunset" class="tool-button admin-mode-button" type="button">Sunset</button>
+          <button data-admin-mode="ocean" class="tool-button admin-mode-button" type="button">Ocean</button>
+          <button data-admin-mode="candy" class="tool-button admin-mode-button" type="button">Candy</button>
+          <button data-admin-mode="lava" class="tool-button admin-mode-button" type="button">Lava</button>
+          <button data-admin-mode="ice" class="tool-button admin-mode-button" type="button">Ice</button>
+          <button data-admin-mode="forest" class="tool-button admin-mode-button" type="button">Forest</button>
+          <button data-admin-mode="galaxy" class="tool-button admin-mode-button" type="button">Galaxy</button>
+          <button data-admin-mode="lemonade" class="tool-button admin-mode-button" type="button">Lemonade</button>
+          <button data-admin-mode="storm" class="tool-button admin-mode-button" type="button">Storm</button>
+          <button data-admin-mode="zebra" class="tool-button admin-mode-button" type="button">Zebra</button>
+          <button data-admin-mode="pixel" class="tool-button admin-mode-button" type="button">Pixel</button>
+          <button data-admin-mode="rose" class="tool-button admin-mode-button" type="button">Rose</button>
+          <button data-admin-mode="mint" class="tool-button admin-mode-button" type="button">Mint</button>
+          <button data-admin-mode="shadow" class="tool-button admin-mode-button" type="button">Shadow</button>
+          <button data-admin-mode="glow" class="tool-button admin-mode-button" type="button">Glow</button>
+        </div>
+
+        <div class="admin-mode-grid admin-action-grid">
+          <button id="burst-confetti" class="tool-button admin-action-button" type="button">Burst Confetti</button>
+          <button id="reset-party" class="tool-button admin-action-button" type="button">Reset Party</button>
+          <button id="global-burst" class="tool-button admin-action-button" type="button">Global Burst</button>
+          <button id="global-clear" class="tool-button admin-action-button" type="button">Clear For All</button>
+          <button id="global-shake" class="tool-button admin-action-button" type="button">Screen Shake</button>
+          <button id="surprise-color" class="tool-button admin-action-button" type="button">Surprise Color</button>
+          <button id="dark-canvas" class="tool-button admin-action-button" type="button">Dark Canvas</button>
+          <button id="light-canvas" class="tool-button admin-action-button" type="button">Light Canvas</button>
+          <button id="rainbow-storm" class="tool-button admin-action-button" type="button">Rainbow Storm</button>
+          <button id="gold-rush" class="tool-button admin-action-button" type="button">Gold Rush</button>
+          <button id="night-party" class="tool-button admin-action-button" type="button">Night Party</button>
+          <button id="flip-colors" class="tool-button admin-action-button" type="button">Flip Colors</button>
+          <button id="ocean-wash" class="tool-button admin-action-button" type="button">Ocean Wash</button>
+          <button id="pink-pop" class="tool-button admin-action-button" type="button">Pink Pop</button>
+          <button id="mega-party" class="tool-button admin-action-button" type="button">Mega Party</button>
+          <button id="random-command" class="tool-button admin-action-button" type="button">Random Command</button>
+          <button id="lava-blast" class="tool-button admin-action-button" type="button">Lava Blast</button>
+          <button id="ice-flash" class="tool-button admin-action-button" type="button">Ice Flash</button>
+          <button id="super-blackout" class="tool-button admin-action-button" type="button">Super Blackout</button>
+          <button id="forest-wash" class="tool-button admin-action-button" type="button">Forest Wash</button>
+          <button id="galaxy-burst" class="tool-button admin-action-button" type="button">Galaxy Burst</button>
+          <button id="lemon-zing" class="tool-button admin-action-button" type="button">Lemon Zing</button>
+          <button id="storm-slam" class="tool-button admin-action-button" type="button">Storm Slam</button>
+          <button id="zebra-flip" class="tool-button admin-action-button" type="button">Zebra Flip</button>
+          <button id="pixel-pop" class="tool-button admin-action-button" type="button">Pixel Pop</button>
+          <button id="rose-rush" class="tool-button admin-action-button" type="button">Rose Rush</button>
+          <button id="mint-splash" class="tool-button admin-action-button" type="button">Mint Splash</button>
+          <button id="shadow-drop" class="tool-button admin-action-button" type="button">Shadow Drop</button>
+          <button id="glow-up" class="tool-button admin-action-button" type="button">Glow Up</button>
+          <button id="draw-motorcycle" class="tool-button admin-action-button" type="button">Motorcycle</button>
+        </div>
+
+        <div class="admin-share-box">
+          <span class="section-label">Watch Bear Draw</span>
+          <p id="watch-mode-status" class="admin-copy">Off for everyone right now.</p>
+          <div class="admin-mode-grid admin-action-grid">
+            <button id="start-watch-mode" class="tool-button admin-action-button" type="button">Start Watching</button>
+            <button id="stop-watch-mode" class="tool-button admin-action-button" type="button">Stop Watching</button>
+          </div>
+        </div>
+
+        <div class="admin-share-box">
+          <label class="section-label" for="global-message-input">Global Text</label>
+          <input id="global-message-input" class="admin-link-input" type="text" maxlength="120" placeholder="Type a message for everyone">
+          <div class="admin-mode-grid admin-action-grid">
+            <button id="send-global-message" class="tool-button admin-action-button" type="button">Send Global Text</button>
+            <button id="clear-global-message" class="tool-button admin-action-button" type="button">Clear Global Text</button>
+          </div>
+        </div>
+
+        <div class="admin-share-box">
+          <span class="section-label">Challenge Judge</span>
+          <p id="challenge-admin-status" class="admin-copy">No challenge is running right now.</p>
+          <p id="challenge-submission-count" class="admin-copy">0 drawings submitted</p>
+          <label class="section-label" for="challenge-limit-input">Submission Limit</label>
+          <input id="challenge-limit-input" class="admin-link-input" type="number" min="1" max="50" value="8">
+          <p id="challenge-selected-player" class="admin-copy">No drawing selected yet.</p>
+          <img id="challenge-preview-image" class="challenge-preview-image is-hidden" alt="Selected challenge drawing preview">
+          <div class="admin-mode-grid admin-action-grid">
+            <button id="start-challenge" class="tool-button admin-action-button" type="button">Start Random Challenge</button>
+            <button id="next-submission" class="tool-button admin-action-button" type="button">Next Drawing</button>
+            <button id="pick-winner" class="tool-button admin-action-button" type="button">Pick Winner</button>
+            <button id="end-challenge" class="tool-button admin-action-button" type="button">End Challenge</button>
+          </div>
+        </div>
+
+        <div class="admin-share-box">
+          <label class="section-label" for="permission-link">Permission Link</label>
+          <input id="permission-link" class="admin-link-input" type="text" readonly>
+          <button id="copy-permission-link" class="action-button secondary" type="button">Copy Permission Link</button>
+        </div>
+
+        <div class="admin-share-box">
+          <span class="section-label online-players-label">Players Online</span>
+          <p id="online-players-count" class="admin-copy online-players-copy">Checking for other players...</p>
+          <p id="online-players-note" class="admin-copy online-players-copy">This count does not include your Bear browser.</p>
+        </div>
+
+        <div class="admin-share-box">
+          <span class="section-label">Realtime Prep</span>
+          <p class="admin-copy" id="realtime-preview">
+            Firebase is not connected yet. When it is, this panel can show real Bear online/offline status.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <aside class="sidebar panel">
+        <div class="control-block">
+          <span class="section-label">Tool</span>
+          <div class="tool-grid">
+            <button id="brush-tool" class="tool-button is-active" type="button">Brush</button>
+            <button id="eraser-tool" class="tool-button" type="button">Eraser</button>
+          </div>
+        </div>
+
+        <div class="control-block">
+          <label class="section-label" for="color-picker">Color</label>
+          <div class="color-row">
+            <input id="color-picker" type="color" value="#1530ff">
+            <span id="color-value" class="value-pill">#1530FF</span>
+          </div>
+          <div class="swatch-row" aria-label="Suggested colors">
+            <button class="swatch" data-color="#1530ff" style="--swatch:#1530ff;" type="button"></button>
+            <button class="swatch" data-color="#ff5f36" style="--swatch:#ff5f36;" type="button"></button>
+            <button class="swatch" data-color="#f5c400" style="--swatch:#f5c400;" type="button"></button>
+            <button class="swatch" data-color="#171717" style="--swatch:#171717;" type="button"></button>
+            <button class="swatch" data-color="#08b981" style="--swatch:#08b981;" type="button"></button>
+          </div>
+        </div>
+
+        <div class="control-block">
+          <label class="section-label" for="brush-size">Brush Size</label>
+          <input id="brush-size" type="range" min="2" max="48" value="12">
+          <div class="range-row">
+            <span>Fine</span>
+            <strong id="brush-size-value">12 px</strong>
+            <span>Bold</span>
+          </div>
+        </div>
+
+        <div class="control-block">
+          <span class="section-label">Mirror Brush</span>
+          <div class="mirror-toggle-row">
+            <button id="toggle-mirror" class="action-button secondary is-stopped" type="button">Start Mirror</button>
+          </div>
+          <div class="mirror-grid">
+            <button id="mirror-off" class="tool-button is-active" type="button">Off</button>
+            <button id="mirror-vertical" class="tool-button" type="button">Left/Right</button>
+            <button id="mirror-horizontal" class="tool-button" type="button">Top/Bottom</button>
+            <button id="mirror-quad" class="tool-button" type="button">Quad</button>
+          </div>
+          <p id="mirror-description" class="helper-copy">Draw normally with no mirrored copies.</p>
+        </div>
+
+        <div class="control-block">
+          <label class="section-label" for="background-picker">Canvas Base</label>
+          <div class="color-row">
+            <input id="background-picker" type="color" value="#fffdf8">
+            <button id="fill-background" class="action-button secondary" type="button">Fill Canvas</button>
+          </div>
+        </div>
+
+        <div class="control-block actions">
+          <button id="clear-canvas" class="action-button danger" type="button">Clear</button>
+          <button id="save-image" class="action-button primary" type="button">Save PNG</button>
+        </div>
+
+        <div class="stats-block">
+          <div>
+            <span class="section-label">Strokes</span>
+            <strong id="stroke-count">0</strong>
+          </div>
+          <div>
+            <span class="section-label">Pointer</span>
+            <strong id="pointer-state">Idle</strong>
+          </div>
+        </div>
+      </aside>
+
+      <section class="canvas-panel panel">
+        <div class="canvas-topbar">
+          <p id="status-message" class="status-message">Press and drag to draw. Touch works too.</p>
+          <button id="reset-view" class="text-button" type="button">Reset Canvas Size</button>
+        </div>
+        <div class="canvas-frame">
+          <div id="game-text-overlay" class="game-text-overlay is-hidden" aria-live="polite">
+            <span class="section-label">In Game Text</span>
+            <strong id="game-text-title">Bear Broadcast</strong>
+            <p id="game-text-value"></p>
+          </div>
+          <div class="mirror-guides" id="mirror-guides" aria-hidden="true">
+            <span class="mirror-line vertical"></span>
+            <span class="mirror-line horizontal"></span>
+          </div>
+          <canvas id="drawing-surface" width="1200" height="780" aria-label="Drawing canvas"></canvas>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    window.COLOR_CURRENT_FIREBASE_CONFIG = {
+      enabled: true,
+      apiKey: "AIzaSyDn9zsZiTzDosmF8RyDqr3XZ0bm-erw5GM",
+      authDomain: "bear-72a69.firebaseapp.com",
+      databaseURL: "https://bear-72a69-default-rtdb.firebaseio.com/",
+      projectId: "bear-72a69",
+      storageBucket: "bear-72a69.firebasestorage.app",
+      messagingSenderId: "346094161855",
+      appId: "1:346094161855:web:7c0607917605f2906ddb0a",
+      measurementId: "G-JGCRDHMJQK"
+    };
+  </script>
+  <script src="../script.js?v=20260413-1415"></script>
+</body>
+</html>
