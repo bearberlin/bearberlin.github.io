@@ -23,7 +23,7 @@ window.localStorage.setItem(SESSION_KEY, sessionId);
 const state = {
   running: false,
   score: 0,
-  lives: 3,
+  lives: 0,
   wave: 1,
   player: { x: canvas.width / 2, y: canvas.height - 62, radius: 20, speed: 360 },
   bullets: [],
@@ -35,6 +35,7 @@ const state = {
   waveTimer: 0,
   lastFrame: 0,
   bestScore: 0,
+  submittedBestScore: 0,
   leaderboard: [],
   onlineCount: 0,
   saveScore: null
@@ -74,7 +75,7 @@ function escapeHtml(value) {
 function resetGame() {
   state.running = false;
   state.score = 0;
-  state.lives = 3;
+  state.lives = state.bestScore;
   state.wave = 1;
   state.player.x = canvas.width / 2;
   state.player.y = canvas.height - 62;
@@ -92,24 +93,15 @@ function startGame() {
   state.running = true;
   state.lastFrame = performance.now();
   overlayCardEl.classList.add("is-hidden");
-  statusEl.textContent = "Wave 1 started. Protect the notebook!";
+  statusEl.textContent = "Wave 1 started. Endless mode is on, so go for a huge score.";
   if (!animationFrameId) {
     animationFrameId = requestAnimationFrame(gameLoop);
   }
 }
 
-function gameOver() {
-  state.running = false;
-  overlayTitleEl.textContent = "Notebook saved";
-  overlayCopyEl.textContent = `You scored ${state.score} points. Press play again to try another run.`;
-  overlayCardEl.classList.remove("is-hidden");
-  statusEl.textContent = "Game over. Score saved to the leaderboard.";
-  saveScore();
-}
-
 function updateHud() {
   scoreEl.textContent = String(state.score);
-  livesEl.textContent = String(state.lives);
+  livesEl.textContent = String(state.bestScore);
   waveEl.textContent = String(state.wave);
   onlineEl.textContent = String(state.onlineCount);
 }
@@ -188,9 +180,9 @@ function updateEnemies(delta) {
     enemy.x += Math.sin(enemy.wobble + enemy.y * 0.01) * 22 * delta;
 
     if (enemy.y > canvas.height + 40) {
-      state.lives -= 1;
+      state.score = Math.max(0, state.score - 10);
       updateHud();
-      statusEl.textContent = "A doodle slipped past. Keep going!";
+      statusEl.textContent = "A target slipped past, so you lost 10 points.";
       return false;
     }
 
@@ -211,10 +203,10 @@ function handleCollisions() {
   state.enemies = state.enemies.filter((enemy) => {
     const playerHit = Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y) < enemy.radius + state.player.radius;
     if (playerHit) {
-      state.lives -= 1;
+      state.score = Math.max(0, state.score - 15);
       addBurst(enemy.x, enemy.y, "#ff5f36");
       updateHud();
-      statusEl.textContent = "Bonk! Stay focused.";
+      statusEl.textContent = "Bonk. You lost 15 points, but the run keeps going.";
       return false;
     }
 
@@ -224,8 +216,10 @@ function handleCollisions() {
       const points = enemy.type === "gold-star" ? 40 : enemy.type === "paper-plane" ? 18 : 12;
       state.score += points;
       state.bestScore = Math.max(state.bestScore, state.score);
+      state.lives = state.bestScore;
       addBurst(enemy.x, enemy.y, enemy.type === "gold-star" ? "#f5c400" : "#1530ff");
       updateHud();
+      saveScore();
       return false;
     }
 
@@ -384,9 +378,6 @@ function gameLoop(timestamp) {
       fireBullet();
     }
 
-    if (state.lives <= 0) {
-      gameOver();
-    }
   }
 
   render();
@@ -409,7 +400,6 @@ async function setupFirebase() {
       getDatabase,
       ref,
       set,
-      push,
       query,
       orderByChild,
       limitToLast,
@@ -420,7 +410,7 @@ async function setupFirebase() {
 
     const app = initializeApp(FIREBASE_CONFIG, "notebook-defender");
     firebaseDatabase = getDatabase(app);
-    leaderboardRef = ref(firebaseDatabase, "shooterArcade/leaderboard");
+    leaderboardRef = ref(firebaseDatabase, "shooterArcade/highScores");
     presenceListRef = ref(firebaseDatabase, "shooterArcade/presence");
     presenceRef = ref(firebaseDatabase, `shooterArcade/presence/${sessionId}`);
 
@@ -452,10 +442,10 @@ async function setupFirebase() {
 
     state.saveScore = async (score) => {
       const playerName = getPlayerName();
-      await push(leaderboardRef, {
+      await set(ref(firebaseDatabase, `shooterArcade/highScores/${sessionId}`), {
         name: playerName,
         score,
-        createdAt: Date.now()
+        updatedAt: Date.now()
       });
     };
   } catch (error) {
@@ -489,8 +479,13 @@ async function saveScore() {
     return;
   }
 
+  if (state.score <= state.submittedBestScore) {
+    return;
+  }
+
   try {
     await state.saveScore(state.score);
+    state.submittedBestScore = state.score;
   } catch (error) {
     statusEl.textContent = "Your score was great, but Firebase could not save it.";
   }

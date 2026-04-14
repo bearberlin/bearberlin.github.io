@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../styles.css?v=20260414-1015">
+  <link rel="stylesheet" href="../styles.css?v=20260414-1045">
 </head>
 <body>
   <main class="arcade-shell">
@@ -35,8 +35,8 @@
           </div>
           <div class="stats-block">
             <div>
-              <span class="section-label">Lives</span>
-              <strong id="arcade-lives">3</strong>
+              <span class="section-label">Best</span>
+              <strong id="arcade-lives">0</strong>
             </div>
           </div>
           <div class="stats-block">
@@ -61,11 +61,11 @@
               <h2 id="arcade-overlay-title">Shoot the doodles</h2>
               <p id="arcade-overlay-copy">
                 Move with arrow keys or WASD. Press space to launch star shots.
-                Keep the notebook safe from paper airplanes and scribble blobs.
+                Keep the notebook safe from paper airplanes and scribble blobs in endless mode.
               </p>
               <div class="arcade-actions">
                 <button id="arcade-start" class="action-button primary" type="button">Start Game</button>
-                <button id="arcade-restart" class="action-button secondary" type="button">Play Again</button>
+                <button id="arcade-restart" class="action-button secondary" type="button">Reset Run</button>
               </div>
             </div>
           </div>
@@ -74,7 +74,7 @@
         <p id="arcade-status" class="arcade-status">Press start when you are ready.</p>
         <p class="arcade-help">
           Blue stars are your shots. Gold stars are bonus targets. Everything here is school-safe:
-          you are defending a notebook from playful paper trouble.
+          you are defending a notebook from playful paper trouble. There is no ending, so try to beat the high score board.
         </p>
       </section>
 
@@ -113,6 +113,6 @@
   </main>
 
   <script src="../firebase-config.js"></script>
-  <script src="./game.js?v=20260414-1015" type="module"></script>
+  <script src="./game.js?v=20260414-1045" type="module"></script>
 </body>
 </html>
