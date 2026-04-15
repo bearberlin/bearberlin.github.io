@@ -5,6 +5,7 @@ const livesEl = document.getElementById("arcade-side");
 const waveEl = document.getElementById("arcade-round");
 const onlineEl = document.getElementById("arcade-online");
 const statusEl = document.getElementById("arcade-status");
+const confettiLayerEl = document.getElementById("arcade-confetti-layer");
 const overlayCardEl = document.getElementById("arcade-overlay-card");
 const overlayTitleEl = document.getElementById("arcade-overlay-title");
 const overlayCopyEl = document.getElementById("arcade-overlay-copy");
@@ -23,9 +24,39 @@ const pickMultiplayerBtn = document.getElementById("pick-multiplayer");
 const pickShooterBtn = document.getElementById("pick-shooter");
 const pickDoodleBtn = document.getElementById("pick-doodle");
 const arcadeCanvasShellEl = document.querySelector(".arcade-canvas-shell");
+const openArcadeAdminBtn = document.getElementById("open-arcade-admin");
+const closeArcadeAdminBtn = document.getElementById("close-arcade-admin");
+const claimArcadeAdminBtn = document.getElementById("claim-arcade-admin");
+const arcadeAdminPanelEl = document.getElementById("arcade-admin-panel");
+const arcadeAdminLockedEl = document.getElementById("arcade-admin-locked");
+const arcadeAdminControlsEl = document.getElementById("arcade-admin-controls");
+const arcadeAdminModeLabelEl = document.getElementById("arcade-admin-mode-label");
+const arcadeOnlinePlayersCountEl = document.getElementById("arcade-online-players-count");
+const arcadePartyButtons = document.querySelectorAll("[data-arcade-party]");
+const arcadeAdminStartBtn = document.getElementById("arcade-admin-start");
+const arcadeAdminResetBtn = document.getElementById("arcade-admin-reset");
+const arcadeAdminFullscreenBtn = document.getElementById("arcade-admin-fullscreen");
+const arcadeAdminConfettiBtn = document.getElementById("arcade-admin-confetti");
+const arcadeAdminSpawnBtn = document.getElementById("arcade-admin-spawn");
+const arcadeAdminClearDoodlesBtn = document.getElementById("arcade-admin-clear-doodles");
+const arcadeAdminPlusScoreBtn = document.getElementById("arcade-admin-plus-score");
+const arcadeAdminClearScoreBtn = document.getElementById("arcade-admin-clear-score");
+const arcadeAdminEasyBtn = document.getElementById("arcade-admin-easy");
+const arcadeAdminNormalBtn = document.getElementById("arcade-admin-normal");
+const arcadeAdminHardBtn = document.getElementById("arcade-admin-hard");
+const arcadeAdminTeleportBtn = document.getElementById("arcade-admin-teleport");
+const arcadeAdminClearEscapedBtn = document.getElementById("arcade-admin-clear-escaped");
+const arcadeAdminForceShootersBtn = document.getElementById("arcade-admin-force-shooters");
+const arcadeAdminForceDoodlesBtn = document.getElementById("arcade-admin-force-doodles");
+const arcadeAdminNextRoundBtn = document.getElementById("arcade-admin-next-round");
+const arcadeAdminBonusRoundBtn = document.getElementById("arcade-admin-bonus-round");
+const arcadeAdminSlowDoodlesBtn = document.getElementById("arcade-admin-slow-doodles");
+const arcadeAdminSpeedDoodlesBtn = document.getElementById("arcade-admin-speed-doodles");
+const arcadeAdminRandomBtn = document.getElementById("arcade-admin-random");
 
 const PLAYER_NAME_KEY = "notebook-defender-name";
 const SESSION_KEY = "notebook-defender-session";
+const ADMIN_KEY = "notebook-defender-admin";
 const FIREBASE_CONFIG = window.COLOR_CURRENT_FIREBASE_CONFIG || { enabled: false };
 const sessionId = window.localStorage.getItem(SESSION_KEY) || `arcade-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
 window.localStorage.setItem(SESSION_KEY, sessionId);
@@ -57,6 +88,9 @@ const state = {
   roundPhase: "waiting",
   escapedDoodles: 0,
   myScore: 0,
+  adminOpen: false,
+  adminUnlocked: window.localStorage.getItem(ADMIN_KEY) === "true",
+  arcadePartyMode: "normal",
   resolvingRound: false,
   processingTag: false,
   singleBest: 0,
@@ -80,6 +114,8 @@ let incrementPlayerScore = null;
 let resetRound = null;
 let setRoundWinner = null;
 let registerDoodleEscape = null;
+
+const arcadeRandomCommands = [];
 
 function getPlayerName() {
   return String(window.localStorage.getItem(PLAYER_NAME_KEY) || "").trim() || "Bear Friend";
@@ -156,6 +192,245 @@ function setMode(mode) {
   renderPlayerList();
 }
 
+function updateArcadeAdminUi() {
+  if (!arcadeAdminPanelEl) {
+    return;
+  }
+
+  arcadeAdminPanelEl.classList.toggle("is-hidden", !state.adminOpen);
+  arcadeAdminLockedEl.classList.toggle("is-hidden", state.adminUnlocked);
+  arcadeAdminControlsEl.classList.toggle("is-hidden", !state.adminUnlocked);
+  arcadeAdminModeLabelEl.textContent = `Mode: ${state.arcadePartyMode[0].toUpperCase()}${state.arcadePartyMode.slice(1)}`;
+  arcadePartyButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.arcadeParty === state.arcadePartyMode);
+  });
+  if (arcadeOnlinePlayersCountEl) {
+    const otherPlayers = Math.max(0, state.onlineCount - (state.localPlayer ? 1 : 0));
+    arcadeOnlinePlayersCountEl.textContent = state.mode === "multiplayer"
+      ? `${otherPlayers} other players online right now`
+      : "Single player mode is active right now";
+  }
+}
+
+function openArcadeAdmin() {
+  state.adminOpen = true;
+  updateArcadeAdminUi();
+}
+
+function closeArcadeAdmin() {
+  state.adminOpen = false;
+  updateArcadeAdminUi();
+}
+
+function unlockArcadeAdmin() {
+  state.adminUnlocked = true;
+  window.localStorage.setItem(ADMIN_KEY, "true");
+  statusEl.textContent = "Bear Controls unlocked on this browser.";
+  updateArcadeAdminUi();
+}
+
+function clearArcadePartyClasses() {
+  document.body.classList.remove(
+    "party-disco",
+    "party-rainbow",
+    "party-blackout",
+    "party-ocean"
+  );
+}
+
+function spawnConfettiBurst() {
+  if (!confettiLayerEl) {
+    return;
+  }
+
+  for (let index = 0; index < 18; index += 1) {
+    const piece = document.createElement("span");
+    piece.className = "confetti-piece";
+    piece.style.left = `${Math.random() * 100}%`;
+    piece.style.background = ["#1530ff", "#ff5f36", "#f5c400", "#08b981", "#ff7fbe"][index % 5];
+    piece.style.animationDuration = `${2 + Math.random() * 1.6}s`;
+    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+    confettiLayerEl.appendChild(piece);
+    window.setTimeout(() => piece.remove(), 3800);
+  }
+}
+
+function applyArcadePartyMode(mode) {
+  state.arcadePartyMode = mode;
+  clearArcadePartyClasses();
+
+  if (mode === "disco") {
+    document.body.classList.add("party-disco");
+  } else if (mode === "confetti") {
+    spawnConfettiBurst();
+  } else if (mode === "blackout") {
+    document.body.classList.add("party-blackout");
+  } else if (mode === "rainbow") {
+    document.body.classList.add("party-rainbow");
+  } else if (mode === "ocean") {
+    document.body.classList.add("party-ocean");
+  }
+
+  statusEl.textContent = mode === "normal" ? "Bear Controls reset the party mode." : `Bear turned on ${mode} mode.`;
+  updateArcadeAdminUi();
+}
+
+function setSingleDifficultyPreset(level) {
+  if (level === "easy") {
+    state.singleDifficulty = 1;
+    statusEl.textContent = "Single player set to easy.";
+  } else if (level === "normal") {
+    state.singleDifficulty = 3;
+    statusEl.textContent = "Single player set to normal.";
+  } else {
+    state.singleDifficulty = 6;
+    statusEl.textContent = "Single player set to hard.";
+  }
+}
+
+function addLocalScore(amount) {
+  state.myScore = Math.max(0, state.myScore + amount);
+  if (state.localPlayer) {
+    state.localPlayer.score = state.myScore;
+  }
+  state.singleBest = Math.max(state.singleBest, state.myScore);
+  updateHud();
+  renderPlayerList();
+}
+
+function spawnAdminDoodle() {
+  if (state.mode === "single") {
+    state.singleEnemies.push(createSingleEnemy());
+    statusEl.textContent = "Bear spawned one doodle.";
+    return;
+  }
+
+  statusEl.textContent = "Spawn Doodle works in single player.";
+}
+
+function clearAdminDoodles() {
+  if (state.mode === "single") {
+    state.singleEnemies = [];
+    statusEl.textContent = "Bear cleared the doodles.";
+    return;
+  }
+
+  statusEl.textContent = "Clear Doodles works in single player.";
+}
+
+function teleportLocalPlayerToCenter() {
+  if (!state.localPlayer) {
+    return;
+  }
+
+  state.localPlayer.x = canvas.width / 2;
+  state.localPlayer.y = state.mode === "single" ? canvas.height - 104 : canvas.height - 120;
+  if (state.mode === "multiplayer") {
+    publishLocalPlayer();
+  }
+  statusEl.textContent = "You moved back to the center.";
+}
+
+async function clearEscapedCount() {
+  if (state.mode === "single") {
+    state.escapedDoodles = 0;
+    state.singleEscaped = 0;
+    updateHud();
+    updateRoundUi();
+    statusEl.textContent = "Escaped doodles cleared.";
+    return;
+  }
+
+  if (!roundRef || !firebaseFns) {
+    statusEl.textContent = "Multiplayer is not connected yet.";
+    return;
+  }
+
+  await firebaseFns.update(roundRef, {
+    escaped: 0,
+    phase: "live",
+    winner: "",
+    updatedAt: Date.now()
+  });
+  statusEl.textContent = "Escaped counter cleared for everyone.";
+}
+
+async function adminForceWinner(side) {
+  if (state.mode === "single") {
+    state.running = false;
+    overlayCardEl.classList.remove("is-hidden");
+    overlayTitleEl.textContent = side === "shooters" ? "Shooters Win" : "Doodles Win";
+    overlayCopyEl.textContent = side === "shooters"
+      ? "Bear ended the round with a shooter win."
+      : "Bear ended the round with a doodle win.";
+    statusEl.textContent = `Bear forced a ${side} win.`;
+    return;
+  }
+
+  if (!roundRef || !firebaseFns) {
+    statusEl.textContent = "Multiplayer is not connected yet.";
+    return;
+  }
+
+  await firebaseFns.update(roundRef, {
+    phase: "finished",
+    winner: side,
+    updatedAt: Date.now()
+  });
+  statusEl.textContent = `Bear forced a ${side} win.`;
+}
+
+async function adminNextRound() {
+  if (state.mode === "single") {
+    state.roundNumber += 1;
+    state.singleEnemies = [];
+    state.singleSpawnTimer = 999;
+    updateHud();
+    statusEl.textContent = "Bear skipped to the next round.";
+    return;
+  }
+
+  if (!resetRound) {
+    statusEl.textContent = "Multiplayer is not connected yet.";
+    return;
+  }
+
+  await resetRound(state.roundNumber + 1);
+  statusEl.textContent = "Bear started the next round.";
+}
+
+function setSingleSpeedPreset(preset) {
+  if (preset === "slow") {
+    state.singleDifficulty = 1;
+    state.singleEnemies.forEach((enemy) => {
+      enemy.speed = Math.max(8, enemy.speed * 0.7);
+    });
+    statusEl.textContent = "Doodles slowed down.";
+  } else {
+    state.singleDifficulty = Math.max(2, state.singleDifficulty + 1);
+    state.singleEnemies.forEach((enemy) => {
+      enemy.speed *= 1.2;
+    });
+    statusEl.textContent = "Doodles sped up a little.";
+  }
+}
+
+async function adminStartGame() {
+  await joinMatch();
+}
+
+async function adminResetGame() {
+  await resetMySpot();
+}
+
+function adminBonusRound() {
+  state.roundNumber += 1;
+  addLocalScore(100);
+  state.singleSpawnTimer = 999;
+  updateHud();
+  statusEl.textContent = "Bonus round started.";
+}
+
 async function toggleArcadeFullscreen() {
   if (!arcadeCanvasShellEl) {
     return;
@@ -196,6 +471,7 @@ function updateHud() {
     arcadeShootBtn.disabled = !canShoot;
     arcadeShootBtn.textContent = canShoot ? "Shoot" : "Only Shooters Shoot";
   }
+  updateArcadeAdminUi();
 }
 
 function renderLeaderboard() {
@@ -1146,6 +1422,57 @@ setSelectedSide("shooter");
 render();
 setupFirebase();
 
+arcadeRandomCommands.push(
+  () => applyArcadePartyMode("disco"),
+  () => applyArcadePartyMode("confetti"),
+  () => applyArcadePartyMode("rainbow"),
+  () => spawnAdminDoodle(),
+  () => addLocalScore(50),
+  () => clearAdminDoodles(),
+  () => teleportLocalPlayerToCenter(),
+  () => adminBonusRound(),
+  () => setSingleSpeedPreset("slow"),
+  () => setSingleSpeedPreset("fast")
+);
+
+if (openArcadeAdminBtn) {
+  openArcadeAdminBtn.addEventListener("click", openArcadeAdmin);
+}
+if (closeArcadeAdminBtn) {
+  closeArcadeAdminBtn.addEventListener("click", closeArcadeAdmin);
+}
+if (claimArcadeAdminBtn) {
+  claimArcadeAdminBtn.addEventListener("click", unlockArcadeAdmin);
+}
+arcadePartyButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    applyArcadePartyMode(button.dataset.arcadeParty);
+  });
+});
+arcadeAdminStartBtn?.addEventListener("click", () => { adminStartGame(); });
+arcadeAdminResetBtn?.addEventListener("click", () => { adminResetGame(); });
+arcadeAdminFullscreenBtn?.addEventListener("click", () => { toggleArcadeFullscreen(); });
+arcadeAdminConfettiBtn?.addEventListener("click", spawnConfettiBurst);
+arcadeAdminSpawnBtn?.addEventListener("click", spawnAdminDoodle);
+arcadeAdminClearDoodlesBtn?.addEventListener("click", clearAdminDoodles);
+arcadeAdminPlusScoreBtn?.addEventListener("click", () => addLocalScore(50));
+arcadeAdminClearScoreBtn?.addEventListener("click", () => addLocalScore(-state.myScore));
+arcadeAdminEasyBtn?.addEventListener("click", () => setSingleDifficultyPreset("easy"));
+arcadeAdminNormalBtn?.addEventListener("click", () => setSingleDifficultyPreset("normal"));
+arcadeAdminHardBtn?.addEventListener("click", () => setSingleDifficultyPreset("hard"));
+arcadeAdminTeleportBtn?.addEventListener("click", teleportLocalPlayerToCenter);
+arcadeAdminClearEscapedBtn?.addEventListener("click", () => { clearEscapedCount(); });
+arcadeAdminForceShootersBtn?.addEventListener("click", () => { adminForceWinner("shooters"); });
+arcadeAdminForceDoodlesBtn?.addEventListener("click", () => { adminForceWinner("doodles"); });
+arcadeAdminNextRoundBtn?.addEventListener("click", () => { adminNextRound(); });
+arcadeAdminBonusRoundBtn?.addEventListener("click", adminBonusRound);
+arcadeAdminSlowDoodlesBtn?.addEventListener("click", () => setSingleSpeedPreset("slow"));
+arcadeAdminSpeedDoodlesBtn?.addEventListener("click", () => setSingleSpeedPreset("fast"));
+arcadeAdminRandomBtn?.addEventListener("click", () => {
+  const command = arcadeRandomCommands[Math.floor(Math.random() * arcadeRandomCommands.length)];
+  command?.();
+});
+
 pickSingleBtn.addEventListener("click", () => setMode("single"));
 pickMultiplayerBtn.addEventListener("click", () => setMode("multiplayer"));
 pickShooterBtn.addEventListener("click", () => setSelectedSide("shooter"));
@@ -1191,6 +1518,7 @@ window.addEventListener("keydown", handleKeyDown);
 window.addEventListener("keyup", handleKeyUp);
 document.addEventListener("fullscreenchange", updateArcadeFullscreenButton);
 updateArcadeFullscreenButton();
+updateArcadeAdminUi();
 
 if (!animationFrameId) {
   animationFrameId = requestAnimationFrame(syncLoop);

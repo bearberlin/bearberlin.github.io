@@ -7,9 +7,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../styles.css?v=20260414-1400">
+  <link rel="stylesheet" href="../styles.css?v=20260414-1515">
 </head>
 <body>
+  <div id="arcade-confetti-layer" class="confetti-layer" aria-hidden="true"></div>
   <main class="arcade-shell">
     <section class="arcade-hero panel">
       <p class="eyebrow">School Arcade</p>
@@ -21,6 +22,63 @@
       <div class="arcade-link-row">
         <a class="home-button primary" href="/">Back Home</a>
         <a class="home-button secondary" href="/drawing/">Open Drawing App</a>
+        <button id="open-arcade-admin" class="home-button secondary" type="button">Open Bear Controls</button>
+      </div>
+    </section>
+
+    <section id="arcade-admin-panel" class="admin-panel panel is-hidden" aria-label="Shooter admin panel">
+      <div class="admin-panel__header">
+        <div>
+          <p class="section-label">Creator Panel</p>
+          <h2>Bear Controls</h2>
+        </div>
+        <button id="close-arcade-admin" class="text-button" type="button">Close</button>
+      </div>
+
+      <div id="arcade-admin-locked" class="admin-locked">
+        <p class="admin-copy">Press the button below if this is Bear's browser on this computer.</p>
+        <button id="claim-arcade-admin" class="action-button primary" type="button">This Is Bear's Browser</button>
+      </div>
+
+      <div id="arcade-admin-controls" class="admin-controls is-hidden">
+        <p id="arcade-admin-mode-label" class="admin-copy">Mode: Normal</p>
+        <div class="admin-mode-grid">
+          <button data-arcade-party="normal" class="tool-button admin-mode-button is-active" type="button">Normal</button>
+          <button data-arcade-party="disco" class="tool-button admin-mode-button" type="button">Disco</button>
+          <button data-arcade-party="confetti" class="tool-button admin-mode-button" type="button">Confetti</button>
+          <button data-arcade-party="blackout" class="tool-button admin-mode-button" type="button">Blackout</button>
+          <button data-arcade-party="rainbow" class="tool-button admin-mode-button" type="button">Rainbow</button>
+          <button data-arcade-party="ocean" class="tool-button admin-mode-button" type="button">Ocean</button>
+        </div>
+
+        <div class="admin-mode-grid admin-action-grid">
+          <button id="arcade-admin-start" class="tool-button admin-action-button" type="button">Start Game</button>
+          <button id="arcade-admin-reset" class="tool-button admin-action-button" type="button">Reset Game</button>
+          <button id="arcade-admin-fullscreen" class="tool-button admin-action-button" type="button">Fullscreen</button>
+          <button id="arcade-admin-confetti" class="tool-button admin-action-button" type="button">Burst Confetti</button>
+          <button id="arcade-admin-spawn" class="tool-button admin-action-button" type="button">Spawn Doodle</button>
+          <button id="arcade-admin-clear-doodles" class="tool-button admin-action-button" type="button">Clear Doodles</button>
+          <button id="arcade-admin-plus-score" class="tool-button admin-action-button" type="button">Give 50 Score</button>
+          <button id="arcade-admin-clear-score" class="tool-button admin-action-button" type="button">Clear Score</button>
+          <button id="arcade-admin-easy" class="tool-button admin-action-button" type="button">Easy Mode</button>
+          <button id="arcade-admin-normal" class="tool-button admin-action-button" type="button">Normal Mode</button>
+          <button id="arcade-admin-hard" class="tool-button admin-action-button" type="button">Hard Mode</button>
+          <button id="arcade-admin-teleport" class="tool-button admin-action-button" type="button">Center Me</button>
+          <button id="arcade-admin-clear-escaped" class="tool-button admin-action-button" type="button">Clear Escaped</button>
+          <button id="arcade-admin-force-shooters" class="tool-button admin-action-button" type="button">Shooters Win</button>
+          <button id="arcade-admin-force-doodles" class="tool-button admin-action-button" type="button">Doodles Win</button>
+          <button id="arcade-admin-next-round" class="tool-button admin-action-button" type="button">Next Round</button>
+          <button id="arcade-admin-bonus-round" class="tool-button admin-action-button" type="button">Bonus Round</button>
+          <button id="arcade-admin-slow-doodles" class="tool-button admin-action-button" type="button">Slow Doodles</button>
+          <button id="arcade-admin-speed-doodles" class="tool-button admin-action-button" type="button">Speed Doodles</button>
+          <button id="arcade-admin-random" class="tool-button admin-action-button" type="button">Random Command</button>
+        </div>
+
+        <div class="admin-share-box">
+          <span class="section-label online-players-label">Players Online</span>
+          <p id="arcade-online-players-count" class="admin-copy online-players-copy">Checking for other players...</p>
+          <p class="admin-copy online-players-copy">This panel only unlocks on Bear's browser on this computer.</p>
+        </div>
       </div>
     </section>
 
@@ -131,6 +189,6 @@
   </main>
 
   <script src="../firebase-config.js"></script>
-  <script src="./game.js?v=20260414-1400" type="module"></script>
+  <script src="./game.js?v=20260414-1515" type="module"></script>
 </body>
 </html>
