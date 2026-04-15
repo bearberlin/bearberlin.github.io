@@ -1091,6 +1091,14 @@ input[type="range"] {
   justify-content: flex-end;
 }
 
+.arcade-stage-toolbar__actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
 .status-message {
   margin: 0;
   color: var(--muted);

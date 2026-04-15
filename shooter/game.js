@@ -9,6 +9,7 @@ const overlayCardEl = document.getElementById("arcade-overlay-card");
 const overlayTitleEl = document.getElementById("arcade-overlay-title");
 const overlayCopyEl = document.getElementById("arcade-overlay-copy");
 const arcadeFullscreenBtn = document.getElementById("arcade-fullscreen");
+const arcadeShootBtn = document.getElementById("arcade-shoot");
 const startBtn = document.getElementById("arcade-start");
 const restartBtn = document.getElementById("arcade-restart");
 const saveNameBtn = document.getElementById("arcade-save-name");
@@ -190,6 +191,11 @@ function updateHud() {
   }
   waveEl.textContent = String(state.roundNumber);
   onlineEl.textContent = `${state.escapedDoodles}/${MAX_DOODLE_ESCAPES}`;
+  if (arcadeShootBtn) {
+    const canShoot = state.mode === "single" || (state.localPlayer && state.localPlayer.side === "shooter");
+    arcadeShootBtn.disabled = !canShoot;
+    arcadeShootBtn.textContent = canShoot ? "Shoot" : "Only Shooters Shoot";
+  }
 }
 
 function renderLeaderboard() {
@@ -689,6 +695,25 @@ async function fireShot() {
   }
 }
 
+function tryShoot() {
+  if (!state.running) {
+    statusEl.textContent = "Press Start Game first.";
+    return;
+  }
+
+  if (state.mode === "single") {
+    fireSingleShot();
+    return;
+  }
+
+  if (!state.localPlayer || state.localPlayer.side !== "shooter") {
+    statusEl.textContent = "Pick Shooter if you want to shoot.";
+    return;
+  }
+
+  fireShot();
+}
+
 async function maybeStartRound() {
   if (!roundRef) {
     return;
@@ -1077,17 +1102,14 @@ async function setupFirebase() {
 
 function handleKeyDown(event) {
   const key = event.key.toLowerCase();
-  if (["arrowleft", "arrowright", "arrowup", "arrowdown", "a", "d", "w", "s", " "].includes(key)) {
+  const isShootKey = key === " " || key === "space" || key === "spacebar" || event.code === "Space";
+  if (["arrowleft", "arrowright", "arrowup", "arrowdown", "a", "d", "w", "s"].includes(key) || isShootKey) {
     event.preventDefault();
   }
 
   state.keys.add(key);
-  if (key === " " && state.running) {
-    if (state.mode === "single") {
-      fireSingleShot();
-    } else {
-      fireShot();
-    }
+  if (isShootKey) {
+    tryShoot();
   }
 }
 
@@ -1111,6 +1133,11 @@ pickShooterBtn.addEventListener("click", () => setSelectedSide("shooter"));
 pickDoodleBtn.addEventListener("click", () => setSelectedSide("doodle"));
 startBtn.addEventListener("click", joinMatch);
 restartBtn.addEventListener("click", resetMySpot);
+if (arcadeShootBtn) {
+  arcadeShootBtn.addEventListener("click", () => {
+    tryShoot();
+  });
+}
 if (arcadeFullscreenBtn) {
   arcadeFullscreenBtn.addEventListener("click", () => {
     toggleArcadeFullscreen();

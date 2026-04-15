@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../styles.css?v=20260414-1315">
+  <link rel="stylesheet" href="../styles.css?v=20260414-1345">
 </head>
 <body>
   <main class="arcade-shell">
@@ -27,7 +27,10 @@
     <section class="arcade-layout">
       <section class="arcade-stage panel">
         <div class="arcade-stage-toolbar">
-          <button id="arcade-fullscreen" class="text-button" type="button">Go Full Screen</button>
+          <div class="arcade-stage-toolbar__actions">
+            <button id="arcade-shoot" class="action-button primary" type="button">Shoot</button>
+            <button id="arcade-fullscreen" class="text-button" type="button">Go Full Screen</button>
+          </div>
         </div>
         <div class="arcade-hud">
           <div class="stats-block">
@@ -128,6 +131,6 @@
   </main>
 
   <script src="../firebase-config.js"></script>
-  <script src="./game.js?v=20260414-1315" type="module"></script>
+  <script src="./game.js?v=20260414-1345" type="module"></script>
 </body>
 </html>
