@@ -53,6 +53,16 @@ const arcadeAdminBonusRoundBtn = document.getElementById("arcade-admin-bonus-rou
 const arcadeAdminSlowDoodlesBtn = document.getElementById("arcade-admin-slow-doodles");
 const arcadeAdminSpeedDoodlesBtn = document.getElementById("arcade-admin-speed-doodles");
 const arcadeAdminRandomBtn = document.getElementById("arcade-admin-random");
+const arcadeAdminPlus200Btn = document.getElementById("arcade-admin-plus-200");
+const arcadeAdminMinus50Btn = document.getElementById("arcade-admin-minus-50");
+const arcadeAdminSpawn3Btn = document.getElementById("arcade-admin-spawn-3");
+const arcadeAdminRemove1Btn = document.getElementById("arcade-admin-remove-1");
+const arcadeAdminFreezeBtn = document.getElementById("arcade-admin-freeze");
+const arcadeAdminThawBtn = document.getElementById("arcade-admin-thaw");
+const arcadeAdminPartyBurstBtn = document.getElementById("arcade-admin-party-burst");
+const arcadeAdminResetPartyBtn = document.getElementById("arcade-admin-reset-party");
+const arcadeAdminSingleNowBtn = document.getElementById("arcade-admin-single-now");
+const arcadeAdminMultiNowBtn = document.getElementById("arcade-admin-multi-now");
 
 const PLAYER_NAME_KEY = "notebook-defender-name";
 const SESSION_KEY = "notebook-defender-session";
@@ -308,6 +318,12 @@ function spawnAdminDoodle() {
   statusEl.textContent = "Spawn Doodle works in single player.";
 }
 
+function spawnAdminDoodles(count) {
+  for (let index = 0; index < count; index += 1) {
+    spawnAdminDoodle();
+  }
+}
+
 function clearAdminDoodles() {
   if (state.mode === "single") {
     state.singleEnemies = [];
@@ -316,6 +332,16 @@ function clearAdminDoodles() {
   }
 
   statusEl.textContent = "Clear Doodles works in single player.";
+}
+
+function removeOneAdminDoodle() {
+  if (state.mode === "single") {
+    state.singleEnemies.pop();
+    statusEl.textContent = "Bear removed one doodle.";
+    return;
+  }
+
+  statusEl.textContent = "Remove 1 Doodle works in single player.";
 }
 
 function teleportLocalPlayerToCenter() {
@@ -415,6 +441,31 @@ function setSingleSpeedPreset(preset) {
   }
 }
 
+function freezeSingleDoodles() {
+  if (state.mode !== "single") {
+    statusEl.textContent = "Freeze Doodles works in single player.";
+    return;
+  }
+
+  state.singleEnemies.forEach((enemy) => {
+    enemy.speed = 0;
+  });
+  statusEl.textContent = "Doodles are frozen.";
+}
+
+function thawSingleDoodles() {
+  if (state.mode !== "single") {
+    statusEl.textContent = "Unfreeze Doodles works in single player.";
+    return;
+  }
+
+  state.singleEnemies = state.singleEnemies.map((enemy) => ({
+    ...enemy,
+    speed: Math.max(12, 13 + Math.random() * 8 + state.singleDifficulty * 2.5)
+  }));
+  statusEl.textContent = "Doodles can move again.";
+}
+
 async function adminStartGame() {
   await joinMatch();
 }
@@ -429,6 +480,11 @@ function adminBonusRound() {
   state.singleSpawnTimer = 999;
   updateHud();
   statusEl.textContent = "Bonus round started.";
+}
+
+function setModeNow(mode) {
+  setMode(mode);
+  statusEl.textContent = mode === "single" ? "Bear switched to single player." : "Bear switched to multiplayer.";
 }
 
 async function toggleArcadeFullscreen() {
@@ -1427,12 +1483,19 @@ arcadeRandomCommands.push(
   () => applyArcadePartyMode("confetti"),
   () => applyArcadePartyMode("rainbow"),
   () => spawnAdminDoodle(),
+  () => spawnAdminDoodles(3),
   () => addLocalScore(50),
+  () => addLocalScore(200),
+  () => addLocalScore(-50),
   () => clearAdminDoodles(),
+  () => removeOneAdminDoodle(),
   () => teleportLocalPlayerToCenter(),
   () => adminBonusRound(),
   () => setSingleSpeedPreset("slow"),
-  () => setSingleSpeedPreset("fast")
+  () => setSingleSpeedPreset("fast"),
+  () => freezeSingleDoodles(),
+  () => thawSingleDoodles(),
+  () => applyArcadePartyMode("normal")
 );
 
 if (openArcadeAdminBtn) {
@@ -1468,6 +1531,19 @@ arcadeAdminNextRoundBtn?.addEventListener("click", () => { adminNextRound(); });
 arcadeAdminBonusRoundBtn?.addEventListener("click", adminBonusRound);
 arcadeAdminSlowDoodlesBtn?.addEventListener("click", () => setSingleSpeedPreset("slow"));
 arcadeAdminSpeedDoodlesBtn?.addEventListener("click", () => setSingleSpeedPreset("fast"));
+arcadeAdminPlus200Btn?.addEventListener("click", () => addLocalScore(200));
+arcadeAdminMinus50Btn?.addEventListener("click", () => addLocalScore(-50));
+arcadeAdminSpawn3Btn?.addEventListener("click", () => spawnAdminDoodles(3));
+arcadeAdminRemove1Btn?.addEventListener("click", removeOneAdminDoodle);
+arcadeAdminFreezeBtn?.addEventListener("click", freezeSingleDoodles);
+arcadeAdminThawBtn?.addEventListener("click", thawSingleDoodles);
+arcadeAdminPartyBurstBtn?.addEventListener("click", () => {
+  applyArcadePartyMode("disco");
+  spawnConfettiBurst();
+});
+arcadeAdminResetPartyBtn?.addEventListener("click", () => applyArcadePartyMode("normal"));
+arcadeAdminSingleNowBtn?.addEventListener("click", () => setModeNow("single"));
+arcadeAdminMultiNowBtn?.addEventListener("click", () => setModeNow("multiplayer"));
 arcadeAdminRandomBtn?.addEventListener("click", () => {
   const command = arcadeRandomCommands[Math.floor(Math.random() * arcadeRandomCommands.length)];
   command?.();
