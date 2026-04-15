@@ -534,7 +534,7 @@ function updateSinglePlayer(delta) {
   });
 
   state.singleSpawnTimer += delta;
-  if (state.singleSpawnTimer > Math.max(0.5, 1.25 - state.singleDifficulty * 0.05)) {
+  if (state.singleSpawnTimer > Math.max(0.9, 1.9 - state.singleDifficulty * 0.06)) {
     state.singleSpawnTimer = 0;
     state.singleEnemies.push(createSingleEnemy());
   }
