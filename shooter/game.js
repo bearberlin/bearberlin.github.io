@@ -491,6 +491,17 @@ function updateSinglePlayer(delta) {
   state.singleEnemies = state.singleEnemies.filter((enemy) => {
     enemy.y += enemy.speed * delta;
 
+    const bodyHit = Math.hypot(state.localPlayer.x - enemy.x, state.localPlayer.y - enemy.y) < PLAYER_RADIUS * 2;
+    if (bodyHit) {
+      state.myScore += 10;
+      state.singleBest = Math.max(state.singleBest, state.myScore);
+      state.localPlayer.score = state.myScore;
+      statusEl.textContent = "You bumped a doodle and tagged it.";
+      updateHud();
+      renderPlayerList();
+      return false;
+    }
+
     const hitIndex = state.shots.findIndex((shot) => Math.hypot(shot.x - enemy.x, shot.y - enemy.y) < PLAYER_RADIUS + 8);
     if (hitIndex !== -1) {
       state.shots.splice(hitIndex, 1);
@@ -865,13 +876,21 @@ async function handleLocalCollisions() {
     return Math.hypot((shot.x || 0) - state.localPlayer.x, (shot.y || 0) - state.localPlayer.y) < PLAYER_RADIUS + 8;
   });
 
-  if (!hits) {
+  const bodyHitPlayer = Object.values(state.players).find((player) => {
+    if (!player || !player.online || player.id === sessionId || player.side !== "shooter" || player.alive === false) {
+      return false;
+    }
+
+    return Math.hypot((player.x || 0) - state.localPlayer.x, (player.y || 0) - state.localPlayer.y) < PLAYER_RADIUS * 2;
+  });
+
+  if (!hits && !bodyHitPlayer) {
     return;
   }
 
   state.processingTag = true;
   state.localPlayer.alive = false;
-  statusEl.textContent = "You were tagged. Wait for the next round.";
+  statusEl.textContent = bodyHitPlayer ? "A shooter ran into you and tagged you." : "You were tagged. Wait for the next round.";
   await publishLocalPlayer();
 
   const { doodles, shooters, liveDoodles } = getTeamCounts();
@@ -882,7 +901,7 @@ async function handleLocalCollisions() {
       }
       return Math.hypot((shot.x || 0) - state.localPlayer.x, (shot.y || 0) - state.localPlayer.y) < PLAYER_RADIUS + 8;
     });
-    await handleRoundWin("shooters", shooterShot?.ownerId || null);
+    await handleRoundWin("shooters", shooterShot?.ownerId || bodyHitPlayer?.id || null);
   }
 
   state.processingTag = false;
