@@ -97,11 +97,13 @@ const fillBackgroundBtn = document.getElementById("fill-background");
 const clearCanvasBtn = document.getElementById("clear-canvas");
 const saveImageBtn = document.getElementById("save-image");
 const resetViewBtn = document.getElementById("reset-view");
+const drawingFullscreenBtn = document.getElementById("drawing-fullscreen");
 const strokeCountEl = document.getElementById("stroke-count");
 const pointerStateEl = document.getElementById("pointer-state");
 const statusMessageEl = document.getElementById("status-message");
 const toolIndicatorEl = document.getElementById("tool-indicator");
 const swatches = document.querySelectorAll(".swatch");
+const drawingFrameEl = document.getElementById("drawing-frame");
 
 const state = {
   tool: "brush",
@@ -1338,10 +1340,12 @@ function resetCanvas() {
 }
 
 function resizeCanvas() {
-  const frame = canvas.parentElement;
+  const frame = drawingFrameEl || canvas.parentElement;
   const displayWidth = Math.floor(frame.clientWidth - 2);
   const displayHeight = Math.floor(
-    Math.min(window.innerHeight * 0.72, 780)
+    document.fullscreenElement === drawingFrameEl
+      ? window.innerHeight - 32
+      : Math.min(window.innerHeight * 0.72, 780)
   );
 
   const snapshot = document.createElement("canvas");
@@ -1356,6 +1360,32 @@ function resizeCanvas() {
   context.drawImage(snapshot, 0, 0, snapshot.width, snapshot.height, 0, 0, canvas.width, canvas.height);
   context.lineCap = "round";
   context.lineJoin = "round";
+}
+
+async function toggleDrawingFullscreen() {
+  if (!drawingFrameEl) {
+    return;
+  }
+
+  try {
+    if (document.fullscreenElement === drawingFrameEl) {
+      await document.exitFullscreen();
+      return;
+    }
+
+    await drawingFrameEl.requestFullscreen();
+  } catch (error) {
+    statusMessageEl.textContent = "Fullscreen is not available right now.";
+  }
+}
+
+function updateDrawingFullscreenButton() {
+  if (!drawingFullscreenBtn || !drawingFrameEl) {
+    return;
+  }
+
+  const isFullscreen = document.fullscreenElement === drawingFrameEl;
+  drawingFullscreenBtn.textContent = isFullscreen ? "Exit Full Screen" : "Go Full Screen";
 }
 
 function getPoint(event) {
@@ -2216,6 +2246,12 @@ resetViewBtn.addEventListener("click", () => {
   statusMessageEl.textContent = "Canvas resized to fit the window.";
 });
 
+if (drawingFullscreenBtn) {
+  drawingFullscreenBtn.addEventListener("click", () => {
+    toggleDrawingFullscreen();
+  });
+}
+
 canvas.addEventListener("pointerdown", startStroke);
 canvas.addEventListener("pointermove", moveStroke);
 canvas.addEventListener("pointerup", endStroke);
@@ -2223,6 +2259,12 @@ canvas.addEventListener("pointerleave", endStroke);
 canvas.addEventListener("pointercancel", endStroke);
 
 window.addEventListener("resize", resizeCanvas);
+document.addEventListener("fullscreenchange", () => {
+  updateDrawingFullscreenButton();
+  window.setTimeout(() => {
+    resizeCanvas();
+  }, 30);
+});
 window.addEventListener("keydown", handleAdminShortcut);
 window.addEventListener("keyup", handleAdminShortcut);
 document.addEventListener("keydown", handleAdminShortcut);
@@ -2242,6 +2284,7 @@ updateMirrorUI();
 updateAdminAccessUI();
 updateAdminModeUI();
 updateMultiplayerPreview();
+updateDrawingFullscreenButton();
 resizeCanvas();
 runLoadingSequence();
 setupRealtimePresence();

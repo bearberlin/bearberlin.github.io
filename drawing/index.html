@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../styles.css?v=20260413-1415">
+  <link rel="stylesheet" href="../styles.css?v=20260414-1315">
 </head>
 <body>
   <div id="confetti-layer" class="confetti-layer" aria-hidden="true"></div>
@@ -291,9 +291,12 @@
       <section class="canvas-panel panel">
         <div class="canvas-topbar">
           <p id="status-message" class="status-message">Press and drag to draw. Touch works too.</p>
-          <button id="reset-view" class="text-button" type="button">Reset Canvas Size</button>
+          <div class="canvas-topbar__actions">
+            <button id="drawing-fullscreen" class="text-button" type="button">Go Full Screen</button>
+            <button id="reset-view" class="text-button" type="button">Reset Canvas Size</button>
+          </div>
         </div>
-        <div class="canvas-frame">
+        <div id="drawing-frame" class="canvas-frame">
           <div id="game-text-overlay" class="game-text-overlay is-hidden" aria-live="polite">
             <span class="section-label">In Game Text</span>
             <strong id="game-text-title">Bear Broadcast</strong>
@@ -322,6 +325,6 @@
       measurementId: "G-JGCRDHMJQK"
     };
   </script>
-  <script src="../script.js?v=20260413-1415"></script>
+  <script src="../script.js?v=20260414-1315"></script>
 </body>
 </html>

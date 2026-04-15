@@ -1083,6 +1083,14 @@ input[type="range"] {
   margin-bottom: 0.9rem;
 }
 
+.canvas-topbar__actions,
+.arcade-stage-toolbar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: flex-end;
+}
+
 .status-message {
   margin: 0;
   color: var(--muted);
@@ -1099,6 +1107,54 @@ input[type="range"] {
     linear-gradient(180deg, rgba(20, 32, 51, 0.03) 1px, transparent 1px);
   background-size: auto, 28px 28px, 28px 28px;
   border: 1px solid rgba(20, 32, 51, 0.08);
+}
+
+.canvas-frame:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  padding: 1rem;
+  border-radius: 0;
+  border: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(247, 251, 255, 0.94)),
+    linear-gradient(90deg, rgba(20, 32, 51, 0.03) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(20, 32, 51, 0.03) 1px, transparent 1px);
+}
+
+.canvas-frame:fullscreen #drawing-surface {
+  height: calc(100vh - 2rem);
+  max-height: none;
+  border-radius: 20px;
+}
+
+.arcade-stage-toolbar {
+  margin-bottom: 0.9rem;
+}
+
+.arcade-canvas-shell:fullscreen {
+  display: grid;
+  place-items: center;
+  width: 100vw;
+  height: 100vh;
+  padding: 1rem;
+  border-radius: 0;
+  border: 0;
+  background:
+    radial-gradient(circle at top left, rgba(21, 48, 255, 0.28), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(245, 196, 0, 0.22), transparent 28%),
+    #0f1730;
+}
+
+.arcade-canvas-shell:fullscreen .arcade-canvas {
+  width: min(100%, 1600px);
+  max-height: calc(100vh - 2rem);
+  aspect-ratio: 16 / 9;
+  border-radius: 20px;
+}
+
+.arcade-canvas-shell:fullscreen .arcade-overlay {
+  padding: 1.5rem;
 }
 
 body.party-blackout .panel {

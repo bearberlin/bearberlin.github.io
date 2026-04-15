@@ -8,6 +8,7 @@ const statusEl = document.getElementById("arcade-status");
 const overlayCardEl = document.getElementById("arcade-overlay-card");
 const overlayTitleEl = document.getElementById("arcade-overlay-title");
 const overlayCopyEl = document.getElementById("arcade-overlay-copy");
+const arcadeFullscreenBtn = document.getElementById("arcade-fullscreen");
 const startBtn = document.getElementById("arcade-start");
 const restartBtn = document.getElementById("arcade-restart");
 const saveNameBtn = document.getElementById("arcade-save-name");
@@ -20,6 +21,7 @@ const pickSingleBtn = document.getElementById("pick-single");
 const pickMultiplayerBtn = document.getElementById("pick-multiplayer");
 const pickShooterBtn = document.getElementById("pick-shooter");
 const pickDoodleBtn = document.getElementById("pick-doodle");
+const arcadeCanvasShellEl = document.querySelector(".arcade-canvas-shell");
 
 const PLAYER_NAME_KEY = "notebook-defender-name";
 const SESSION_KEY = "notebook-defender-session";
@@ -151,6 +153,32 @@ function setMode(mode) {
 
   updateRoundUi();
   renderPlayerList();
+}
+
+async function toggleArcadeFullscreen() {
+  if (!arcadeCanvasShellEl) {
+    return;
+  }
+
+  try {
+    if (document.fullscreenElement === arcadeCanvasShellEl) {
+      await document.exitFullscreen();
+      return;
+    }
+
+    await arcadeCanvasShellEl.requestFullscreen();
+  } catch (error) {
+    statusEl.textContent = "Fullscreen is not available right now.";
+  }
+}
+
+function updateArcadeFullscreenButton() {
+  if (!arcadeFullscreenBtn || !arcadeCanvasShellEl) {
+    return;
+  }
+
+  const isFullscreen = document.fullscreenElement === arcadeCanvasShellEl;
+  arcadeFullscreenBtn.textContent = isFullscreen ? "Exit Full Screen" : "Go Full Screen";
 }
 
 function updateHud() {
@@ -1083,6 +1111,11 @@ pickShooterBtn.addEventListener("click", () => setSelectedSide("shooter"));
 pickDoodleBtn.addEventListener("click", () => setSelectedSide("doodle"));
 startBtn.addEventListener("click", joinMatch);
 restartBtn.addEventListener("click", resetMySpot);
+if (arcadeFullscreenBtn) {
+  arcadeFullscreenBtn.addEventListener("click", () => {
+    toggleArcadeFullscreen();
+  });
+}
 saveNameBtn.addEventListener("click", async () => {
   const saved = setPlayerName(playerNameInput.value);
   if (!saved) {
@@ -1110,6 +1143,8 @@ playerNameInput.addEventListener("keydown", (event) => {
 
 window.addEventListener("keydown", handleKeyDown);
 window.addEventListener("keyup", handleKeyUp);
+document.addEventListener("fullscreenchange", updateArcadeFullscreenButton);
+updateArcadeFullscreenButton();
 
 if (!animationFrameId) {
   animationFrameId = requestAnimationFrame(syncLoop);
