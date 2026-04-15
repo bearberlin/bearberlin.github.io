@@ -427,7 +427,7 @@ function createSingleEnemy() {
   return {
     x: 80 + Math.random() * (canvas.width - 160),
     y: 80 + Math.random() * 40,
-    speed: 34 + Math.random() * 20 + state.singleDifficulty * 5
+    speed: 18 + Math.random() * 10 + state.singleDifficulty * 3
   };
 }
 
@@ -441,7 +441,7 @@ function resetSinglePlayer() {
   state.singleSpawnTimer = 0;
   state.rawShots = [];
   state.shots = [];
-  state.singleEnemies = Array.from({ length: 2 }, () => createSingleEnemy());
+  state.singleEnemies = Array.from({ length: 1 }, () => createSingleEnemy());
   state.localPlayer = {
     id: sessionId,
     name: getPlayerName(),
@@ -534,14 +534,14 @@ function updateSinglePlayer(delta) {
   });
 
   state.singleSpawnTimer += delta;
-  if (state.singleSpawnTimer > Math.max(1.8, 3.1 - state.singleDifficulty * 0.1)) {
+  if (state.singleSpawnTimer > Math.max(2.8, 4.8 - state.singleDifficulty * 0.12)) {
     state.singleSpawnTimer = 0;
     state.singleEnemies.push(createSingleEnemy());
   }
 
-  if (state.myScore > 0 && state.myScore % 120 === 0) {
-    state.singleDifficulty = 1 + Math.floor(state.myScore / 120);
-    state.roundNumber = 1 + Math.floor(state.myScore / 120);
+  if (state.myScore > 0 && state.myScore % 180 === 0) {
+    state.singleDifficulty = 1 + Math.floor(state.myScore / 180);
+    state.roundNumber = 1 + Math.floor(state.myScore / 180);
     updateHud();
   }
 }
