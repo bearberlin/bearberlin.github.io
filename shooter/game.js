@@ -30,6 +30,7 @@ window.localStorage.setItem(SESSION_KEY, sessionId);
 const BOTTOM_LINE_Y = canvas.height - 72;
 const PLAYER_RADIUS = 18;
 const SHOT_LIFETIME = 1400;
+const MAX_DOODLE_ESCAPES = 5;
 
 const state = {
   connected: false,
@@ -51,10 +52,12 @@ const state = {
   roundNumber: 1,
   roundWinner: "",
   roundPhase: "waiting",
+  escapedDoodles: 0,
   myScore: 0,
   resolvingRound: false,
   processingTag: false,
   singleBest: 0,
+  singleEscaped: 0,
   singleSpawnTimer: 0,
   singleDifficulty: 1
 };
@@ -73,6 +76,7 @@ let saveScore = null;
 let incrementPlayerScore = null;
 let resetRound = null;
 let setRoundWinner = null;
+let registerDoodleEscape = null;
 
 function getPlayerName() {
   return String(window.localStorage.getItem(PLAYER_NAME_KEY) || "").trim() || "Bear Friend";
@@ -157,7 +161,7 @@ function updateHud() {
     livesEl.textContent = state.localPlayer ? (state.localPlayer.side === "shooter" ? "Shooter" : "Doodle") : "None";
   }
   waveEl.textContent = String(state.roundNumber);
-  onlineEl.textContent = String(state.onlineCount);
+  onlineEl.textContent = `${state.escapedDoodles}/${MAX_DOODLE_ESCAPES}`;
 }
 
 function renderLeaderboard() {
@@ -230,19 +234,19 @@ function renderPlayerList() {
 function updateRoundUi() {
   if (state.mode === "single") {
     winnerEl.textContent = "Single Player";
-    roundCopyEl.textContent = "Blast doodle bots before they reach the notebook line.";
+    roundCopyEl.textContent = `Blast doodle bots before ${MAX_DOODLE_ESCAPES} of them reach the notebook line.`;
     return;
   }
 
   if (state.roundPhase === "live") {
     winnerEl.textContent = "Round is live";
-    roundCopyEl.textContent = "Doodles are trying to reach the notebook line. Shooters are trying to tag every doodle.";
+    roundCopyEl.textContent = `Doodles are trying to reach the notebook line. If ${MAX_DOODLE_ESCAPES} escape, shooters lose the round.`;
     return;
   }
 
   if (state.roundWinner === "doodles") {
     winnerEl.textContent = "Doodles win";
-    roundCopyEl.textContent = "A doodle reached the notebook line and the round reset.";
+    roundCopyEl.textContent = `${MAX_DOODLE_ESCAPES} doodles reached the notebook line, so the shooters lost the round.`;
     return;
   }
 
@@ -397,6 +401,8 @@ function resetSinglePlayer() {
   state.running = true;
   state.roundNumber = 1;
   state.myScore = 0;
+  state.escapedDoodles = 0;
+  state.singleEscaped = 0;
   state.singleDifficulty = 1;
   state.singleSpawnTimer = 0;
   state.rawShots = [];
@@ -463,11 +469,19 @@ function updateSinglePlayer(delta) {
     }
 
     if (enemy.y >= BOTTOM_LINE_Y) {
-      state.running = false;
-      overlayCardEl.classList.remove("is-hidden");
-      overlayTitleEl.textContent = "Single Player Over";
-      overlayCopyEl.textContent = `You scored ${state.myScore}. Try again and beat ${state.singleBest}.`;
-      statusEl.textContent = "A doodle reached the notebook line.";
+      state.singleEscaped += 1;
+      state.escapedDoodles = state.singleEscaped;
+      updateHud();
+
+      if (state.singleEscaped >= MAX_DOODLE_ESCAPES) {
+        state.running = false;
+        overlayCardEl.classList.remove("is-hidden");
+        overlayTitleEl.textContent = "Single Player Over";
+        overlayCopyEl.textContent = `${MAX_DOODLE_ESCAPES} doodles escaped. You scored ${state.myScore}. Try again and beat ${state.singleBest}.`;
+        statusEl.textContent = `${MAX_DOODLE_ESCAPES} doodles reached the notebook line.`;
+      } else {
+        statusEl.textContent = `${state.singleEscaped} of ${MAX_DOODLE_ESCAPES} doodles escaped.`;
+      }
       return false;
     }
 
@@ -559,6 +573,7 @@ async function joinMatch() {
     score: state.players[sessionId]?.score || 0
   };
   state.myScore = state.localPlayer.score;
+  state.escapedDoodles = 0;
   state.running = true;
   overlayCardEl.classList.add("is-hidden");
   statusEl.textContent = `You joined as a ${state.selectedSide}.`;
@@ -664,6 +679,7 @@ async function maybeStartRound() {
     await firebaseFns.update(roundRef, {
       phase: "live",
       winner: "",
+      escaped: 0,
       updatedAt: Date.now()
     });
   } catch (error) {
@@ -687,6 +703,7 @@ async function resetPlayersForNewRound(nextRound) {
 
   updates["notebookArena/round/phase"] = "live";
   updates["notebookArena/round/winner"] = "";
+  updates["notebookArena/round/escaped"] = 0;
   updates["notebookArena/round/number"] = nextRound;
   updates["notebookArena/round/updatedAt"] = Date.now();
 
@@ -735,6 +752,18 @@ async function handleRoundWin(winnerSide, scorerId) {
   }, 1800);
 }
 
+async function respawnLocalDoodle() {
+  if (!state.localPlayer || state.localPlayer.side !== "doodle") {
+    return;
+  }
+
+  const spawn = getSpawnForSide("doodle");
+  state.localPlayer.x = spawn.x;
+  state.localPlayer.y = spawn.y;
+  state.localPlayer.alive = true;
+  await publishLocalPlayer();
+}
+
 async function handleLocalObjectives() {
   if (!state.localPlayer || state.roundPhase !== "live" || state.localPlayer.alive === false) {
     return;
@@ -746,7 +775,18 @@ async function handleLocalObjectives() {
   }
 
   if (state.localPlayer.side === "doodle" && state.localPlayer.y >= BOTTOM_LINE_Y) {
-    await handleRoundWin("doodles", sessionId);
+    if (registerDoodleEscape) {
+      const result = await registerDoodleEscape();
+      state.escapedDoodles = result.escaped;
+      updateHud();
+
+      if (result.winner === "doodles") {
+        statusEl.textContent = `${MAX_DOODLE_ESCAPES} doodles escaped. Shooters lose the round.`;
+      } else {
+        statusEl.textContent = `${result.escaped} of ${MAX_DOODLE_ESCAPES} doodles escaped.`;
+        await respawnLocalDoodle();
+      }
+    }
     return;
   }
 
@@ -876,6 +916,30 @@ async function setupFirebase() {
       return nextScore;
     };
 
+    registerDoodleEscape = async () => {
+      const result = await runTransaction(roundRef, (current) => {
+        const base = current || { number: 1, phase: "waiting", winner: "", escaped: 0 };
+        if (base.phase !== "live") {
+          return;
+        }
+
+        const escaped = (base.escaped || 0) + 1;
+        return {
+          ...base,
+          escaped,
+          phase: escaped >= MAX_DOODLE_ESCAPES ? "finished" : "live",
+          winner: escaped >= MAX_DOODLE_ESCAPES ? "doodles" : "",
+          updatedAt: Date.now()
+        };
+      });
+
+      const value = result.snapshot.val() || {};
+      return {
+        escaped: value.escaped || 0,
+        winner: value.winner || ""
+      };
+    };
+
     setRoundWinner = async (winnerSide) => {
       const result = await runTransaction(roundRef, (current) => {
         const base = current || { number: 1, phase: "waiting", winner: "" };
@@ -940,10 +1004,11 @@ async function setupFirebase() {
     });
 
     onValue(roundRef, (snapshot) => {
-      const round = snapshot.val() || { number: 1, phase: "waiting", winner: "" };
+      const round = snapshot.val() || { number: 1, phase: "waiting", winner: "", escaped: 0 };
       state.roundNumber = round.number || 1;
       state.roundPhase = round.phase || "waiting";
       state.roundWinner = round.winner || "";
+      state.escapedDoodles = round.escaped || 0;
       state.resolvingRound = false;
       state.processingTag = false;
       updateHud();
