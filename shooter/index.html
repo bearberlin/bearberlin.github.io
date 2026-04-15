@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../styles.css?v=20260414-1045">
+  <link rel="stylesheet" href="../styles.css?v=20260414-1135">
 </head>
 <body>
   <main class="arcade-shell">
@@ -15,8 +15,8 @@
       <p class="eyebrow">School Arcade</p>
       <h1>Notebook Defender</h1>
       <p class="intro">
-        Defend the notebook with bright star shots. Dodge paper airplanes, pop doodle blobs,
-        and see how high you can climb on the live Firebase leaderboard.
+        Join the live multiplayer match. Pick a side, protect the notebook as a shooter,
+        or sneak through as a doodle and reach the bottom line first.
       </p>
       <div class="arcade-link-row">
         <a class="home-button primary" href="/">Back Home</a>
@@ -29,20 +29,20 @@
         <div class="arcade-hud">
           <div class="stats-block">
             <div>
-              <span class="section-label">Score</span>
+              <span class="section-label">Round</span>
+              <strong id="arcade-round">1</strong>
+            </div>
+          </div>
+          <div class="stats-block">
+            <div>
+              <span class="section-label">Your Side</span>
+              <strong id="arcade-side">None</strong>
+            </div>
+          </div>
+          <div class="stats-block">
+            <div>
+              <span class="section-label">Your Score</span>
               <strong id="arcade-score">0</strong>
-            </div>
-          </div>
-          <div class="stats-block">
-            <div>
-              <span class="section-label">Best</span>
-              <strong id="arcade-lives">0</strong>
-            </div>
-          </div>
-          <div class="stats-block">
-            <div>
-              <span class="section-label">Wave</span>
-              <strong id="arcade-wave">1</strong>
             </div>
           </div>
           <div class="stats-block">
@@ -54,65 +54,75 @@
         </div>
 
         <div class="arcade-canvas-shell">
-          <canvas id="arcade-canvas" class="arcade-canvas" width="960" height="540" aria-label="Notebook Defender game"></canvas>
+          <canvas id="arcade-canvas" class="arcade-canvas" width="960" height="540" aria-label="Notebook Defender multiplayer game"></canvas>
           <div class="arcade-overlay">
             <div id="arcade-overlay-card" class="arcade-overlay__card">
-              <p class="section-label">Ready</p>
-              <h2 id="arcade-overlay-title">Shoot the doodles</h2>
+              <p class="section-label">Choose A Side</p>
+              <h2 id="arcade-overlay-title">Doodles vs Shooters</h2>
               <p id="arcade-overlay-copy">
-                Move with arrow keys or WASD. Press space to launch star shots.
-                Keep the notebook safe from paper airplanes and scribble blobs in endless mode.
+                Shooters use WASD or arrow keys and press space to launch star shots.
+                Doodles race to the notebook line at the bottom before the shooters tag everyone.
               </p>
+              <div class="arcade-side-picker" role="group" aria-label="Choose a team">
+                <button id="pick-shooter" class="action-button primary arcade-side-button" type="button">Be A Shooter</button>
+                <button id="pick-doodle" class="action-button secondary arcade-side-button" type="button">Be A Doodle</button>
+              </div>
               <div class="arcade-actions">
-                <button id="arcade-start" class="action-button primary" type="button">Start Game</button>
-                <button id="arcade-restart" class="action-button secondary" type="button">Reset Run</button>
+                <button id="arcade-start" class="action-button primary" type="button">Join Match</button>
+                <button id="arcade-restart" class="action-button secondary" type="button">Reset My Spot</button>
               </div>
             </div>
           </div>
         </div>
 
-        <p id="arcade-status" class="arcade-status">Press start when you are ready.</p>
+        <p id="arcade-status" class="arcade-status">Pick a side and join the live match.</p>
         <p class="arcade-help">
-          Blue stars are your shots. Gold stars are bonus targets. Everything here is school-safe:
-          you are defending a notebook from playful paper trouble. There is no ending, so try to beat the high score board.
+          School-safe rules: doodles are trying to scribble into the notebook, and shooters are launching bright star tags.
+          If every doodle gets tagged, shooters win the round. If a doodle reaches the notebook line, doodles win the round.
         </p>
       </section>
 
       <aside class="leaderboard-panel panel">
         <p class="section-label">Live Firebase</p>
-        <h2>Top Defenders</h2>
+        <h2>Notebook Arena</h2>
         <label class="section-label" for="arcade-player-name">Player Name</label>
         <input id="arcade-player-name" class="arcade-input" type="text" maxlength="18" placeholder="Pick your nickname">
         <div class="arcade-actions">
           <button id="arcade-save-name" class="action-button secondary" type="button">Save Name</button>
         </div>
 
-        <div id="arcade-leaderboard" class="leaderboard-list">
-          <div class="leaderboard-row">
-            <span class="leaderboard-rank">1</span>
-            <span class="leaderboard-name">Loading...</span>
-            <span class="leaderboard-score">--</span>
+        <article class="arcade-card panel">
+          <p class="section-label">Round Result</p>
+          <h2 id="arcade-winner">Waiting for teams</h2>
+          <p id="arcade-round-copy">At least one doodle and one shooter are needed for a real round.</p>
+        </article>
+
+        <article class="arcade-card panel">
+          <p class="section-label">Players In Match</p>
+          <div id="arcade-player-list" class="leaderboard-list">
+            <div class="leaderboard-row">
+              <span class="leaderboard-rank">1</span>
+              <span class="leaderboard-name">Loading...</span>
+              <span class="leaderboard-score">--</span>
+            </div>
           </div>
-        </div>
+        </article>
 
-        <div class="arcade-info-grid">
-          <article class="arcade-card panel">
-            <p class="section-label">Target Types</p>
-            <h2>Paper Airplanes</h2>
-            <p>Fast and slippery. Hit them before they zip past your star shots.</p>
-          </article>
-
-          <article class="arcade-card panel">
-            <p class="section-label">Bonus Target</p>
-            <h2>Gold Stars</h2>
-            <p>Pop one for a score burst and a quick happy sparkle shower.</p>
-          </article>
-        </div>
+        <article class="arcade-card panel">
+          <p class="section-label">Top Scores</p>
+          <div id="arcade-leaderboard" class="leaderboard-list">
+            <div class="leaderboard-row">
+              <span class="leaderboard-rank">1</span>
+              <span class="leaderboard-name">Loading...</span>
+              <span class="leaderboard-score">--</span>
+            </div>
+          </div>
+        </article>
       </aside>
     </section>
   </main>
 
   <script src="../firebase-config.js"></script>
-  <script src="./game.js?v=20260414-1045" type="module"></script>
+  <script src="./game.js?v=20260414-1135" type="module"></script>
 </body>
 </html>
