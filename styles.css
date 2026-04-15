@@ -603,6 +603,7 @@ button {
   min-width: 10rem;
 }
 
+.arcade-mode-picker,
 .arcade-side-picker {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -610,10 +611,12 @@ button {
   margin-top: 1rem;
 }
 
+.arcade-mode-button,
 .arcade-side-button {
   min-height: 3.25rem;
 }
 
+.arcade-mode-button.is-active,
 .arcade-side-button.is-active {
   box-shadow: 0 0 0 3px rgba(21, 48, 255, 0.14);
   transform: translateY(-1px);
@@ -1413,6 +1416,7 @@ body.screen-shake {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .arcade-mode-picker,
   .arcade-side-picker {
     grid-template-columns: 1fr;
   }

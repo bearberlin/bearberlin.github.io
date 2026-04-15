@@ -16,6 +16,8 @@ const leaderboardEl = document.getElementById("arcade-leaderboard");
 const playerListEl = document.getElementById("arcade-player-list");
 const winnerEl = document.getElementById("arcade-winner");
 const roundCopyEl = document.getElementById("arcade-round-copy");
+const pickSingleBtn = document.getElementById("pick-single");
+const pickMultiplayerBtn = document.getElementById("pick-multiplayer");
 const pickShooterBtn = document.getElementById("pick-shooter");
 const pickDoodleBtn = document.getElementById("pick-doodle");
 
@@ -32,11 +34,14 @@ const SHOT_LIFETIME = 1400;
 const state = {
   connected: false,
   running: false,
+  mode: "single",
   selectedSide: "shooter",
   localPlayer: null,
   players: {},
   rawShots: [],
   shots: [],
+  singleEnemies: [],
+  singleParticles: [],
   leaderboard: [],
   keys: new Set(),
   lastFrame: 0,
@@ -48,7 +53,10 @@ const state = {
   roundPhase: "waiting",
   myScore: 0,
   resolvingRound: false,
-  processingTag: false
+  processingTag: false,
+  singleBest: 0,
+  singleSpawnTimer: 0,
+  singleDifficulty: 1
 };
 
 let animationFrameId = null;
@@ -119,9 +127,35 @@ function setSelectedSide(side) {
     : "Doodles weave through the arena and try to reach the notebook line at the bottom.";
 }
 
+function setMode(mode) {
+  state.mode = mode;
+  pickSingleBtn.classList.toggle("is-active", mode === "single");
+  pickMultiplayerBtn.classList.toggle("is-active", mode === "multiplayer");
+  pickDoodleBtn.disabled = mode === "single";
+  pickDoodleBtn.classList.toggle("is-hidden", mode === "single");
+
+  if (mode === "single") {
+    setSelectedSide("shooter");
+    overlayTitleEl.textContent = "Single Player";
+    overlayCopyEl.textContent = "Move with WASD or arrow keys and press space to launch star shots at doodle bots.";
+    statusEl.textContent = "Single player is ready. Start when you want.";
+  } else {
+    overlayTitleEl.textContent = "Doodles vs Shooters";
+    overlayCopyEl.textContent = "Pick a side for the live Firebase match. Shooters fire star shots and doodles race for the notebook line.";
+    statusEl.textContent = "Pick a side and join the live match.";
+  }
+
+  updateRoundUi();
+  renderPlayerList();
+}
+
 function updateHud() {
   scoreEl.textContent = String(state.myScore);
-  livesEl.textContent = state.localPlayer ? (state.localPlayer.side === "shooter" ? "Shooter" : "Doodle") : "None";
+  if (state.mode === "single") {
+    livesEl.textContent = "Shooter";
+  } else {
+    livesEl.textContent = state.localPlayer ? (state.localPlayer.side === "shooter" ? "Shooter" : "Doodle") : "None";
+  }
   waveEl.textContent = String(state.roundNumber);
   onlineEl.textContent = String(state.onlineCount);
 }
@@ -148,6 +182,22 @@ function renderLeaderboard() {
 }
 
 function renderPlayerList() {
+  if (state.mode === "single") {
+    playerListEl.innerHTML = `
+      <div class="leaderboard-row">
+        <span class="leaderboard-rank">1</span>
+        <span class="leaderboard-name">You [S]</span>
+        <span class="leaderboard-score">${state.myScore}</span>
+      </div>
+      <div class="leaderboard-row">
+        <span class="leaderboard-rank">2</span>
+        <span class="leaderboard-name">Best Solo Run</span>
+        <span class="leaderboard-score">${state.singleBest}</span>
+      </div>
+    `;
+    return;
+  }
+
   const entries = Object.values(state.players)
     .filter((player) => player && player.online)
     .sort((left, right) => {
@@ -178,6 +228,12 @@ function renderPlayerList() {
 }
 
 function updateRoundUi() {
+  if (state.mode === "single") {
+    winnerEl.textContent = "Single Player";
+    roundCopyEl.textContent = "Blast doodle bots before they reach the notebook line.";
+    return;
+  }
+
   if (state.roundPhase === "live") {
     winnerEl.textContent = "Round is live";
     roundCopyEl.textContent = "Doodles are trying to reach the notebook line. Shooters are trying to tag every doodle.";
@@ -280,6 +336,20 @@ function drawPlayer(player) {
   context.restore();
 }
 
+function drawSingleEnemy(enemy) {
+  context.save();
+  context.translate(enemy.x, enemy.y);
+  context.fillStyle = "#ff5f36";
+  context.beginPath();
+  context.arc(0, 0, PLAYER_RADIUS, 0, Math.PI * 2);
+  context.fill();
+  context.fillStyle = "#171717";
+  context.fillRect(-10, -4, 5, 5);
+  context.fillRect(5, -4, 5, 5);
+  context.fillRect(-8, 7, 16, 3);
+  context.restore();
+}
+
 function drawShot(shot) {
   if (!shot) {
     return;
@@ -302,8 +372,119 @@ function drawShot(shot) {
 
 function render() {
   drawBackground();
+  if (state.mode === "single") {
+    if (state.localPlayer) {
+      drawPlayer(state.localPlayer);
+    }
+    state.singleEnemies.forEach(drawSingleEnemy);
+    state.shots.forEach(drawShot);
+    return;
+  }
+
   Object.values(state.players).forEach(drawPlayer);
   state.shots.forEach(drawShot);
+}
+
+function createSingleEnemy() {
+  return {
+    x: 80 + Math.random() * (canvas.width - 160),
+    y: 80 + Math.random() * 40,
+    speed: 70 + Math.random() * 40 + state.singleDifficulty * 10
+  };
+}
+
+function resetSinglePlayer() {
+  state.running = true;
+  state.roundNumber = 1;
+  state.myScore = 0;
+  state.singleDifficulty = 1;
+  state.singleSpawnTimer = 0;
+  state.rawShots = [];
+  state.shots = [];
+  state.singleEnemies = Array.from({ length: 5 }, () => createSingleEnemy());
+  state.localPlayer = {
+    id: sessionId,
+    name: getPlayerName(),
+    side: "shooter",
+    x: canvas.width / 2,
+    y: canvas.height - 104,
+    alive: true,
+    online: true,
+    score: 0
+  };
+  overlayCardEl.classList.add("is-hidden");
+  statusEl.textContent = "Single player started. Stop the doodles.";
+  updateHud();
+  renderPlayerList();
+  updateRoundUi();
+}
+
+function fireSingleShot() {
+  if (!state.localPlayer || state.fireCooldown > 0) {
+    return;
+  }
+
+  state.fireCooldown = 0.24;
+  state.shots.push({
+    x: state.localPlayer.x,
+    y: state.localPlayer.y - 24,
+    vx: 0,
+    vy: -420
+  });
+}
+
+function updateSinglePlayer(delta) {
+  if (!state.localPlayer) {
+    return;
+  }
+
+  updateLocalMovement(delta);
+
+  state.shots = state.shots
+    .map((shot) => ({
+      ...shot,
+      x: shot.x + shot.vx * delta,
+      y: shot.y + shot.vy * delta
+    }))
+    .filter((shot) => shot.y > -40);
+
+  state.singleEnemies = state.singleEnemies.filter((enemy) => {
+    enemy.y += enemy.speed * delta;
+
+    const hitIndex = state.shots.findIndex((shot) => Math.hypot(shot.x - enemy.x, shot.y - enemy.y) < PLAYER_RADIUS + 8);
+    if (hitIndex !== -1) {
+      state.shots.splice(hitIndex, 1);
+      state.myScore += 10;
+      state.singleBest = Math.max(state.singleBest, state.myScore);
+      state.localPlayer.score = state.myScore;
+      updateHud();
+      renderPlayerList();
+      return false;
+    }
+
+    if (enemy.y >= BOTTOM_LINE_Y) {
+      state.running = false;
+      overlayCardEl.classList.remove("is-hidden");
+      overlayTitleEl.textContent = "Single Player Over";
+      overlayCopyEl.textContent = `You scored ${state.myScore}. Try again and beat ${state.singleBest}.`;
+      statusEl.textContent = "A doodle reached the notebook line.";
+      return false;
+    }
+
+    return true;
+  });
+
+  state.singleSpawnTimer += delta;
+  if (state.singleSpawnTimer > Math.max(0.5, 1.25 - state.singleDifficulty * 0.05)) {
+    state.singleSpawnTimer = 0;
+    state.singleEnemies.push(createSingleEnemy());
+  }
+
+  if (state.myScore > 0 && state.myScore % 80 === 0) {
+    state.singleDifficulty = 1 + Math.floor(state.myScore / 80);
+    state.roundNumber = 1 + Math.floor(state.myScore / 80);
+    updateHud();
+  }
 }
 
 function getLiveShots(rawShots) {
@@ -356,6 +537,11 @@ async function publishLocalPlayer() {
 }
 
 async function joinMatch() {
+  if (state.mode === "single") {
+    resetSinglePlayer();
+    return;
+  }
+
   if (!firebaseDatabase) {
     statusEl.textContent = "Firebase is not connected yet.";
     return;
@@ -385,6 +571,11 @@ async function joinMatch() {
 }
 
 async function resetMySpot() {
+  if (state.mode === "single") {
+    resetSinglePlayer();
+    return;
+  }
+
   if (!state.localPlayer) {
     await joinMatch();
     return;
@@ -610,17 +801,21 @@ function syncLoop(timestamp) {
 
   if (state.running) {
     state.fireCooldown = Math.max(0, state.fireCooldown - delta);
-    state.shots = getLiveShots(state.rawShots);
-    updateLocalMovement(delta);
+    if (state.mode === "single") {
+      updateSinglePlayer(delta);
+    } else {
+      state.shots = getLiveShots(state.rawShots);
+      updateLocalMovement(delta);
 
-    const now = performance.now();
-    if (now - state.lastSync > 80) {
-      state.lastSync = now;
-      publishLocalPlayer();
+      const now = performance.now();
+      if (now - state.lastSync > 80) {
+        state.lastSync = now;
+        publishLocalPlayer();
+      }
+
+      handleLocalObjectives();
+      handleLocalCollisions();
     }
-
-    handleLocalObjectives();
-    handleLocalCollisions();
   }
 
   render();
@@ -777,9 +972,13 @@ async function setupFirebase() {
     });
 
     state.connected = true;
-    statusEl.textContent = "Firebase multiplayer connected. Pick a side and join.";
+    if (state.mode === "multiplayer") {
+      statusEl.textContent = "Firebase multiplayer connected. Pick a side and join.";
+    }
   } catch (error) {
-    statusEl.textContent = "Firebase multiplayer could not connect.";
+    if (state.mode === "multiplayer") {
+      statusEl.textContent = "Firebase multiplayer could not connect.";
+    }
   }
 }
 
@@ -791,7 +990,11 @@ function handleKeyDown(event) {
 
   state.keys.add(key);
   if (key === " " && state.running) {
-    fireShot();
+    if (state.mode === "single") {
+      fireSingleShot();
+    } else {
+      fireShot();
+    }
   }
 }
 
@@ -804,10 +1007,13 @@ updateHud();
 renderLeaderboard();
 renderPlayerList();
 updateRoundUi();
+setMode("single");
 setSelectedSide("shooter");
 render();
 setupFirebase();
 
+pickSingleBtn.addEventListener("click", () => setMode("single"));
+pickMultiplayerBtn.addEventListener("click", () => setMode("multiplayer"));
 pickShooterBtn.addEventListener("click", () => setSelectedSide("shooter"));
 pickDoodleBtn.addEventListener("click", () => setSelectedSide("doodle"));
 startBtn.addEventListener("click", joinMatch);
