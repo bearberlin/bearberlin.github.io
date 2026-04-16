@@ -461,7 +461,9 @@ function thawSingleDoodles() {
 
   state.singleEnemies = state.singleEnemies.map((enemy) => ({
     ...enemy,
-    speed: Math.max(12, 13 + Math.random() * 8 + state.singleDifficulty * 2.5)
+    speed: Math.max(20, 112 + Math.random() * 24 + state.singleDifficulty * 10),
+    drift: 40 + Math.random() * 36,
+    wobble: Math.random() * Math.PI * 2
   }));
   statusEl.textContent = "Doodles can move again.";
 }
@@ -759,7 +761,9 @@ function createSingleEnemy() {
   return {
     x: 80 + Math.random() * (canvas.width - 160),
     y: 80 + Math.random() * 40,
-    speed: 130 + Math.random() * 30 + state.singleDifficulty * 12
+    speed: 112 + Math.random() * 24 + state.singleDifficulty * 10,
+    drift: 40 + Math.random() * 36,
+    wobble: Math.random() * Math.PI * 2
   };
 }
 
@@ -822,6 +826,8 @@ function updateSinglePlayer(delta) {
 
   state.singleEnemies = state.singleEnemies.filter((enemy) => {
     enemy.y += enemy.speed * delta;
+    enemy.x += Math.sin(enemy.wobble + enemy.y * 0.02) * enemy.drift * delta;
+    enemy.x = clamp(enemy.x, 28, canvas.width - 28);
 
     const bodyHit = Math.hypot(state.localPlayer.x - enemy.x, state.localPlayer.y - enemy.y) < PLAYER_RADIUS * 2;
     if (bodyHit) {
