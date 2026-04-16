@@ -759,7 +759,7 @@ function createSingleEnemy() {
   return {
     x: 80 + Math.random() * (canvas.width - 160),
     y: 80 + Math.random() * 40,
-    speed: 13 + Math.random() * 8 + state.singleDifficulty * 2.5
+    speed: 130 + Math.random() * 30 + state.singleDifficulty * 12
   };
 }
 
@@ -866,7 +866,7 @@ function updateSinglePlayer(delta) {
   });
 
   state.singleSpawnTimer += delta;
-  if (state.singleEnemies.length < 1 && state.singleSpawnTimer > Math.max(3.8, 5.5 - state.singleDifficulty * 0.16)) {
+  if (state.singleEnemies.length < 1 && state.singleSpawnTimer > Math.max(1.2, 2.4 - state.singleDifficulty * 0.08)) {
     state.singleSpawnTimer = 0;
     state.singleEnemies.push(createSingleEnemy());
   }
