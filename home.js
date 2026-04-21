@@ -1,5 +1,7 @@
 const playIntroSongBtn = document.getElementById("play-intro-song");
 const homeSongLineEl = document.getElementById("home-song-line");
+const homeVisitCountEl = document.getElementById("home-visit-count");
+const homeVisitNoteEl = document.getElementById("home-visit-note");
 
 const introSongLines = [
   "So just draw me",
@@ -30,6 +32,8 @@ const noteFrequencies = {
 let introSongStarted = false;
 let introSongActive = false;
 let audioContext = null;
+const HOME_VISIT_STORAGE_KEY = "bear-home-visit-day";
+const HOME_VISIT_PATH = "siteStats/homeVisits";
 
 function setHomeSongLine(line) {
   if (!homeSongLineEl) {
@@ -45,6 +49,77 @@ function setSongPlayingState(isPlaying) {
   }
 
   homeSongLineEl.classList.toggle("is-singing", isPlaying);
+}
+
+function setVisitCounterState(countLabel, noteLabel) {
+  if (homeVisitCountEl) {
+    homeVisitCountEl.textContent = countLabel;
+  }
+
+  if (homeVisitNoteEl) {
+    homeVisitNoteEl.textContent = noteLabel;
+  }
+}
+
+function getVisitDayKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+async function initVisitCounter() {
+  if (!homeVisitCountEl || !homeVisitNoteEl) {
+    return;
+  }
+
+  const firebaseConfig = window.COLOR_CURRENT_FIREBASE_CONFIG;
+  if (!firebaseConfig || !firebaseConfig.enabled) {
+    setVisitCounterState("Counter offline", "Firebase is not connected yet.");
+    return;
+  }
+
+  setVisitCounterState("Loading visits...", "Connecting to the counter.");
+
+  try {
+    const [{ initializeApp, getApps }, { getDatabase, onValue, ref, runTransaction }] = await Promise.all([
+      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js")
+    ]);
+
+    const app = getApps().find((entry) => entry.name === "bear-home-counter")
+      || initializeApp(firebaseConfig, "bear-home-counter");
+    const database = getDatabase(app);
+    const visitRootRef = ref(database, HOME_VISIT_PATH);
+    const totalVisitsRef = ref(database, `${HOME_VISIT_PATH}/total`);
+    const todayKey = getVisitDayKey();
+    const todayVisitsRef = ref(database, `${HOME_VISIT_PATH}/days/${todayKey}`);
+    const alreadyCountedToday = window.localStorage.getItem(HOME_VISIT_STORAGE_KEY) === todayKey;
+
+    onValue(visitRootRef, (snapshot) => {
+      const stats = snapshot.val() || {};
+      const total = Number(stats.total) || 0;
+      const today = Number(stats.days?.[todayKey]) || 0;
+      const visitLabel = total === 1 ? "1 visit" : `${total} visits`;
+      const todayLabel = today === 1 ? "1 today" : `${today} today`;
+      const browserLabel = alreadyCountedToday
+        ? "This browser already counted today."
+        : "This visit was counted.";
+      setVisitCounterState(visitLabel, `${todayLabel}. ${browserLabel}`);
+    });
+
+    if (!alreadyCountedToday) {
+      await Promise.all([
+        runTransaction(totalVisitsRef, (current) => (Number(current) || 0) + 1),
+        runTransaction(todayVisitsRef, (current) => (Number(current) || 0) + 1)
+      ]);
+      window.localStorage.setItem(HOME_VISIT_STORAGE_KEY, todayKey);
+    }
+  } catch (error) {
+    console.error("Visit counter failed", error);
+    setVisitCounterState("Counter offline", "The visit counter could not connect right now.");
+  }
 }
 
 function getAudioContext() {
@@ -146,3 +221,5 @@ if (playIntroSongBtn) {
 
 window.addEventListener("pointerdown", tryAutoplayIntroSong, { once: true });
 window.addEventListener("keydown", tryAutoplayIntroSong, { once: true });
+
+initVisitCounter();

@@ -485,6 +485,25 @@ button {
   padding: 1.35rem;
 }
 
+.home-visit-card {
+  background:
+    radial-gradient(circle at top right, rgba(8, 185, 129, 0.16), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(245, 196, 0, 0.16), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(241, 255, 248, 0.9));
+}
+
+.home-visit-count {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  line-height: 1;
+  color: #0f7a57;
+}
+
+.home-visit-note {
+  margin-top: 0.65rem;
+}
+
 .arcade-shell {
   width: min(1180px, calc(100% - 1.5rem));
   margin: 0 auto;

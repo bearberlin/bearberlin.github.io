@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=20260414-1045">
+  <link rel="stylesheet" href="./styles.css?v=20260421-1100">
 </head>
 <body>
   <main class="home-shell">
@@ -30,6 +30,13 @@
     </section>
 
     <section class="home-grid">
+      <article class="home-card home-visit-card panel">
+        <p class="section-label">Visit Counter</p>
+        <h2>Friends stopped by</h2>
+        <strong id="home-visit-count" class="home-visit-count">Loading visits...</strong>
+        <p id="home-visit-note" class="home-visit-note">Connecting to the counter.</p>
+      </article>
+
       <article class="home-card panel">
         <p class="section-label">What It Does</p>
         <h2>Draw, erase, mirror, and save</h2>
@@ -57,6 +64,7 @@
       </article>
     </section>
   </main>
-  <script src="./home.js?v=20260413-2025"></script>
+  <script src="./firebase-config.js"></script>
+  <script src="./home.js?v=20260421-1100"></script>
 </body>
 </html>
