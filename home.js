@@ -33,7 +33,9 @@ let introSongStarted = false;
 let introSongActive = false;
 let audioContext = null;
 const HOME_VISIT_STORAGE_KEY = "bear-home-visit-counted";
+const HOME_OWNER_EXCLUDED_KEY = "bear-home-owner-excluded";
 const HOME_VISIT_PATH = "siteStats/homeVisits";
+const OWNER_STORAGE_KEY = "color-current-owner-access";
 
 function setHomeSongLine(line) {
   if (!homeSongLineEl) {
@@ -86,16 +88,31 @@ async function initVisitCounter() {
     const visitRootRef = ref(database, HOME_VISIT_PATH);
     const totalVisitsRef = ref(database, `${HOME_VISIT_PATH}/total`);
     const alreadyCounted = window.localStorage.getItem(HOME_VISIT_STORAGE_KEY) === "true";
+    const isOwnerBrowser = window.localStorage.getItem(OWNER_STORAGE_KEY) === "true";
+    const ownerAlreadyExcluded = window.localStorage.getItem(HOME_OWNER_EXCLUDED_KEY) === "true";
 
     onValue(visitRootRef, (snapshot) => {
       const stats = snapshot.val() || {};
       const total = Number(stats.total) || 0;
       const visitLabel = total === 1 ? "1 visit" : `${total} visits`;
-      const browserLabel = alreadyCounted
-        ? "This browser already counted."
-        : "This browser was counted.";
+      const browserLabel = isOwnerBrowser
+        ? "Your browser is not counted."
+        : alreadyCounted
+          ? "This browser already counted."
+          : "This browser was counted.";
       setVisitCounterState(visitLabel, `Forever counter. ${browserLabel}`);
     });
+
+    if (isOwnerBrowser) {
+      window.localStorage.removeItem(HOME_VISIT_STORAGE_KEY);
+
+      if (alreadyCounted && !ownerAlreadyExcluded) {
+        await runTransaction(totalVisitsRef, (current) => Math.max(0, (Number(current) || 0) - 1));
+        window.localStorage.setItem(HOME_OWNER_EXCLUDED_KEY, "true");
+      }
+
+      return;
+    }
 
     if (!alreadyCounted) {
       await runTransaction(totalVisitsRef, (current) => (Number(current) || 0) + 1);
