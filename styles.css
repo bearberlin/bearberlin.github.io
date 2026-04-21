@@ -492,10 +492,30 @@ button {
     linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(241, 255, 248, 0.9));
 }
 
+.home-visit-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-top: 0.4rem;
+}
+
+.home-visit-stat {
+  padding: 0.85rem 0.9rem;
+  border: 1px solid rgba(15, 122, 87, 0.12);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.home-visit-label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .home-visit-count {
   display: block;
-  margin-top: 0.35rem;
-  font-size: clamp(2rem, 6vw, 3.4rem);
+  margin-top: 0.25rem;
+  font-size: clamp(1.6rem, 5vw, 3rem);
   line-height: 1;
   color: #0f7a57;
 }

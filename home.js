@@ -1,6 +1,7 @@
 const playIntroSongBtn = document.getElementById("play-intro-song");
 const homeSongLineEl = document.getElementById("home-song-line");
 const homeVisitCountEl = document.getElementById("home-visit-count");
+const homeVisitTodayCountEl = document.getElementById("home-visit-today-count");
 const homeVisitNoteEl = document.getElementById("home-visit-note");
 
 const introSongLines = [
@@ -33,6 +34,7 @@ let introSongStarted = false;
 let introSongActive = false;
 let audioContext = null;
 const HOME_VISIT_STORAGE_KEY = "bear-home-visit-counted";
+const HOME_VISIT_TODAY_STORAGE_KEY = "bear-home-visit-today";
 const HOME_OWNER_EXCLUDED_KEY = "bear-home-owner-excluded";
 const HOME_VISIT_PATH = "siteStats/homeVisits";
 const OWNER_STORAGE_KEY = "color-current-owner-access";
@@ -53,9 +55,13 @@ function setSongPlayingState(isPlaying) {
   homeSongLineEl.classList.toggle("is-singing", isPlaying);
 }
 
-function setVisitCounterState(countLabel, noteLabel) {
+function setVisitCounterState(totalLabel, todayLabel, noteLabel) {
   if (homeVisitCountEl) {
-    homeVisitCountEl.textContent = countLabel;
+    homeVisitCountEl.textContent = totalLabel;
+  }
+
+  if (homeVisitTodayCountEl) {
+    homeVisitTodayCountEl.textContent = todayLabel;
   }
 
   if (homeVisitNoteEl) {
@@ -63,18 +69,26 @@ function setVisitCounterState(countLabel, noteLabel) {
   }
 }
 
+function getTodayKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 async function initVisitCounter() {
-  if (!homeVisitCountEl || !homeVisitNoteEl) {
+  if (!homeVisitCountEl || !homeVisitTodayCountEl || !homeVisitNoteEl) {
     return;
   }
 
   const firebaseConfig = window.COLOR_CURRENT_FIREBASE_CONFIG;
   if (!firebaseConfig || !firebaseConfig.enabled) {
-    setVisitCounterState("Counter offline", "Firebase is not connected yet.");
+    setVisitCounterState("Offline", "Offline", "Firebase is not connected yet.");
     return;
   }
 
-  setVisitCounterState("Loading visits...", "Connecting to the counter.");
+  setVisitCounterState("Loading...", "Loading...", "Connecting to the counter.");
 
   try {
     const [{ initializeApp, getApps }, { getDatabase, onValue, ref, runTransaction }] = await Promise.all([
@@ -87,24 +101,30 @@ async function initVisitCounter() {
     const database = getDatabase(app);
     const visitRootRef = ref(database, HOME_VISIT_PATH);
     const totalVisitsRef = ref(database, `${HOME_VISIT_PATH}/total`);
+    const todayKey = getTodayKey();
+    const todayVisitsRef = ref(database, `${HOME_VISIT_PATH}/days/${todayKey}`);
     const alreadyCounted = window.localStorage.getItem(HOME_VISIT_STORAGE_KEY) === "true";
+    const alreadyCountedToday = window.localStorage.getItem(HOME_VISIT_TODAY_STORAGE_KEY) === todayKey;
     const isOwnerBrowser = window.localStorage.getItem(OWNER_STORAGE_KEY) === "true";
     const ownerAlreadyExcluded = window.localStorage.getItem(HOME_OWNER_EXCLUDED_KEY) === "true";
 
     onValue(visitRootRef, (snapshot) => {
       const stats = snapshot.val() || {};
       const total = Number(stats.total) || 0;
-      const visitLabel = total === 1 ? "1 visit" : `${total} visits`;
+      const today = Number(stats.days?.[todayKey]) || 0;
+      const visitLabel = String(total);
+      const todayLabel = String(today);
       const browserLabel = isOwnerBrowser
         ? "Your browser is not counted."
-        : alreadyCounted
-          ? "This browser already counted."
-          : "This browser was counted.";
-      setVisitCounterState(visitLabel, `Forever counter. ${browserLabel}`);
+        : alreadyCountedToday
+          ? "This browser already counted today."
+          : "This browser was counted today.";
+      setVisitCounterState(visitLabel, todayLabel, `Ever and today. ${browserLabel}`);
     });
 
     if (isOwnerBrowser) {
       window.localStorage.removeItem(HOME_VISIT_STORAGE_KEY);
+      window.localStorage.removeItem(HOME_VISIT_TODAY_STORAGE_KEY);
 
       if (alreadyCounted && !ownerAlreadyExcluded) {
         await runTransaction(totalVisitsRef, (current) => Math.max(0, (Number(current) || 0) - 1));
@@ -118,9 +138,14 @@ async function initVisitCounter() {
       await runTransaction(totalVisitsRef, (current) => (Number(current) || 0) + 1);
       window.localStorage.setItem(HOME_VISIT_STORAGE_KEY, "true");
     }
+
+    if (!alreadyCountedToday) {
+      await runTransaction(todayVisitsRef, (current) => (Number(current) || 0) + 1);
+      window.localStorage.setItem(HOME_VISIT_TODAY_STORAGE_KEY, todayKey);
+    }
   } catch (error) {
     console.error("Visit counter failed", error);
-    setVisitCounterState("Counter offline", "The visit counter could not connect right now.");
+    setVisitCounterState("Offline", "Offline", "The visit counter could not connect right now.");
   }
 }
 
