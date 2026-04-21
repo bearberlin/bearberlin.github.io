@@ -75,6 +75,7 @@ const BOTTOM_LINE_Y = canvas.height - 72;
 const PLAYER_RADIUS = 18;
 const SHOT_LIFETIME = 1400;
 const MAX_DOODLE_ESCAPES = 5;
+const GOLDEN_DOODLE_CHANCE = 0.12;
 
 const state = {
   connected: false,
@@ -711,14 +712,26 @@ function drawPlayer(player) {
 function drawSingleEnemy(enemy) {
   context.save();
   context.translate(enemy.x, enemy.y);
-  context.fillStyle = "#ff5f36";
+  context.fillStyle = enemy.kind === "golden" ? "#f5c400" : "#ff5f36";
   context.beginPath();
   context.arc(0, 0, PLAYER_RADIUS, 0, Math.PI * 2);
   context.fill();
+  if (enemy.kind === "golden") {
+    context.strokeStyle = "rgba(255, 255, 255, 0.75)";
+    context.lineWidth = 3;
+    context.beginPath();
+    context.arc(0, 0, PLAYER_RADIUS + 5, 0, Math.PI * 2);
+    context.stroke();
+  }
   context.fillStyle = "#171717";
   context.fillRect(-10, -4, 5, 5);
   context.fillRect(5, -4, 5, 5);
   context.fillRect(-8, 7, 16, 3);
+  if (enemy.kind === "golden") {
+    context.fillStyle = "#fff7d6";
+    context.fillRect(-6, -18, 4, 8);
+    context.fillRect(2, -21, 4, 11);
+  }
   context.restore();
 }
 
@@ -742,6 +755,20 @@ function drawShot(shot) {
   context.restore();
 }
 
+function drawSingleParticle(particle) {
+  if (!particle) {
+    return;
+  }
+
+  context.save();
+  context.globalAlpha = Math.max(0, particle.life / particle.maxLife);
+  context.fillStyle = particle.color;
+  context.beginPath();
+  context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
+}
+
 function render() {
   drawBackground();
   if (state.mode === "single") {
@@ -750,6 +777,7 @@ function render() {
     }
     state.singleEnemies.forEach(drawSingleEnemy);
     state.shots.forEach(drawShot);
+    state.singleParticles.forEach(drawSingleParticle);
     return;
   }
 
@@ -758,13 +786,33 @@ function render() {
 }
 
 function createSingleEnemy() {
+  const kind = Math.random() < GOLDEN_DOODLE_CHANCE ? "golden" : "normal";
   return {
     x: 80 + Math.random() * (canvas.width - 160),
     y: 80 + Math.random() * 40,
     speed: 112 + Math.random() * 24 + state.singleDifficulty * 10,
     drift: 40 + Math.random() * 36,
-    wobble: Math.random() * Math.PI * 2
+    wobble: Math.random() * Math.PI * 2,
+    kind,
+    reward: kind === "golden" ? 75 : 10
   };
+}
+
+function addSingleParticles(x, y, colors) {
+  colors.forEach((color, index) => {
+    const angle = (Math.PI * 2 * index) / colors.length + Math.random() * 0.5;
+    const speed = 55 + Math.random() * 110;
+    state.singleParticles.push({
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      size: 3 + Math.random() * 4,
+      life: 0.6 + Math.random() * 0.45,
+      maxLife: 0.6 + Math.random() * 0.45,
+      color
+    });
+  });
 }
 
 function resetSinglePlayer() {
@@ -777,6 +825,7 @@ function resetSinglePlayer() {
   state.singleSpawnTimer = 0;
   state.rawShots = [];
   state.shots = [];
+  state.singleParticles = [];
   state.singleEnemies = Array.from({ length: 1 }, () => createSingleEnemy());
   state.localPlayer = {
     id: sessionId,
@@ -824,6 +873,16 @@ function updateSinglePlayer(delta) {
     }))
     .filter((shot) => shot.y > -40);
 
+  state.singleParticles = state.singleParticles
+    .map((particle) => ({
+      ...particle,
+      x: particle.x + particle.vx * delta,
+      y: particle.y + particle.vy * delta,
+      vy: particle.vy + 120 * delta,
+      life: particle.life - delta
+    }))
+    .filter((particle) => particle.life > 0);
+
   state.singleEnemies = state.singleEnemies.filter((enemy) => {
     enemy.y += enemy.speed * delta;
     enemy.x += Math.sin(enemy.wobble + enemy.y * 0.02) * enemy.drift * delta;
@@ -831,10 +890,16 @@ function updateSinglePlayer(delta) {
 
     const bodyHit = Math.hypot(state.localPlayer.x - enemy.x, state.localPlayer.y - enemy.y) < PLAYER_RADIUS * 2;
     if (bodyHit) {
-      state.myScore += 10;
+      state.myScore += enemy.reward || 10;
       state.singleBest = Math.max(state.singleBest, state.myScore);
       state.localPlayer.score = state.myScore;
-      statusEl.textContent = "You bumped a doodle and tagged it.";
+      if (enemy.kind === "golden") {
+        addSingleParticles(enemy.x, enemy.y, ["#f5c400", "#fff1a8", "#ff8c42", "#ffffff"]);
+        statusEl.textContent = "Lucky catch!";
+      } else {
+        addSingleParticles(enemy.x, enemy.y, ["#ff5f36", "#f5c400", "#1530ff"]);
+        statusEl.textContent = "You bumped a doodle and tagged it.";
+      }
       updateHud();
       renderPlayerList();
       return false;
@@ -843,9 +908,16 @@ function updateSinglePlayer(delta) {
     const hitIndex = state.shots.findIndex((shot) => Math.hypot(shot.x - enemy.x, shot.y - enemy.y) < PLAYER_RADIUS + 8);
     if (hitIndex !== -1) {
       state.shots.splice(hitIndex, 1);
-      state.myScore += 10;
+      state.myScore += enemy.reward || 10;
       state.singleBest = Math.max(state.singleBest, state.myScore);
       state.localPlayer.score = state.myScore;
+      if (enemy.kind === "golden") {
+        addSingleParticles(enemy.x, enemy.y, ["#f5c400", "#fff1a8", "#ff8c42", "#ffffff", "#08b981"]);
+        spawnConfettiBurst();
+        statusEl.textContent = "Lucky shot!";
+      } else {
+        addSingleParticles(enemy.x, enemy.y, ["#ff5f36", "#f5c400", "#1530ff"]);
+      }
       updateHud();
       renderPlayerList();
       return false;
