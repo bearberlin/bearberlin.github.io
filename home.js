@@ -32,7 +32,7 @@ const noteFrequencies = {
 let introSongStarted = false;
 let introSongActive = false;
 let audioContext = null;
-const HOME_VISIT_STORAGE_KEY = "bear-home-visit-day";
+const HOME_VISIT_STORAGE_KEY = "bear-home-visit-counted";
 const HOME_VISIT_PATH = "siteStats/homeVisits";
 
 function setHomeSongLine(line) {
@@ -61,14 +61,6 @@ function setVisitCounterState(countLabel, noteLabel) {
   }
 }
 
-function getVisitDayKey() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 async function initVisitCounter() {
   if (!homeVisitCountEl || !homeVisitNoteEl) {
     return;
@@ -93,28 +85,21 @@ async function initVisitCounter() {
     const database = getDatabase(app);
     const visitRootRef = ref(database, HOME_VISIT_PATH);
     const totalVisitsRef = ref(database, `${HOME_VISIT_PATH}/total`);
-    const todayKey = getVisitDayKey();
-    const todayVisitsRef = ref(database, `${HOME_VISIT_PATH}/days/${todayKey}`);
-    const alreadyCountedToday = window.localStorage.getItem(HOME_VISIT_STORAGE_KEY) === todayKey;
+    const alreadyCounted = window.localStorage.getItem(HOME_VISIT_STORAGE_KEY) === "true";
 
     onValue(visitRootRef, (snapshot) => {
       const stats = snapshot.val() || {};
       const total = Number(stats.total) || 0;
-      const today = Number(stats.days?.[todayKey]) || 0;
       const visitLabel = total === 1 ? "1 visit" : `${total} visits`;
-      const todayLabel = today === 1 ? "1 today" : `${today} today`;
-      const browserLabel = alreadyCountedToday
-        ? "This browser already counted today."
-        : "This visit was counted.";
-      setVisitCounterState(visitLabel, `${todayLabel}. ${browserLabel}`);
+      const browserLabel = alreadyCounted
+        ? "This browser already counted."
+        : "This browser was counted.";
+      setVisitCounterState(visitLabel, `Forever counter. ${browserLabel}`);
     });
 
-    if (!alreadyCountedToday) {
-      await Promise.all([
-        runTransaction(totalVisitsRef, (current) => (Number(current) || 0) + 1),
-        runTransaction(todayVisitsRef, (current) => (Number(current) || 0) + 1)
-      ]);
-      window.localStorage.setItem(HOME_VISIT_STORAGE_KEY, todayKey);
+    if (!alreadyCounted) {
+      await runTransaction(totalVisitsRef, (current) => (Number(current) || 0) + 1);
+      window.localStorage.setItem(HOME_VISIT_STORAGE_KEY, "true");
     }
   } catch (error) {
     console.error("Visit counter failed", error);
