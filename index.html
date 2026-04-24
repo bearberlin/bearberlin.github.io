@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=20260421-1200">
+  <link rel="stylesheet" href="./styles.css?v=20260421-1305">
 </head>
 <body>
   <main class="home-shell">
@@ -25,6 +25,7 @@
       <div class="home-actions">
         <a class="home-button primary" href="./drawing/">Play My Drawing App</a>
         <a class="home-button primary" href="./shooter/">Play Notebook Defender</a>
+        <button id="open-ai-cinema" class="home-button secondary" type="button">Play Corny AI Video</button>
         <a class="home-button secondary" href="#about">About This Site</a>
       </div>
     </section>
@@ -64,6 +65,16 @@
         </p>
       </article>
 
+      <article class="home-card home-ai-card panel">
+        <p class="section-label">AI Cinema</p>
+        <h2>The corny machine has arrived</h2>
+        <p>
+          Press play for a ridiculous fake AI movie full of shiny gradients, giant words,
+          and way too much future energy.
+        </p>
+        <button id="open-ai-cinema-card" class="home-button primary" type="button">Launch AI Cinema</button>
+      </article>
+
       <article class="home-card panel" id="about">
         <p class="section-label">About Bear</p>
         <h2>Making a personal website</h2>
@@ -73,7 +84,30 @@
       </article>
     </section>
   </main>
+  <div id="ai-cinema-modal" class="ai-cinema-modal is-hidden" aria-hidden="true">
+    <div class="ai-cinema-shell panel">
+      <div class="ai-cinema-header">
+        <div>
+          <p class="section-label">Ultra Future Theater</p>
+          <h2>The Most Corny AI Video Ever</h2>
+        </div>
+        <button id="close-ai-cinema" class="text-button" type="button">Close</button>
+      </div>
+      <div class="ai-cinema-screen">
+        <div class="ai-cinema-spark ai-cinema-spark--one"></div>
+        <div class="ai-cinema-spark ai-cinema-spark--two"></div>
+        <div class="ai-cinema-spark ai-cinema-spark--three"></div>
+        <p id="ai-cinema-kicker" class="ai-cinema-kicker">Loading future...</p>
+        <strong id="ai-cinema-title" class="ai-cinema-title">HYPER AI ULTRA MAX</strong>
+        <p id="ai-cinema-copy" class="ai-cinema-copy">Please stand by for maximum corniness.</p>
+        <div class="ai-cinema-grid"></div>
+      </div>
+      <div class="ai-cinema-actions">
+        <button id="play-ai-cinema" class="home-button primary" type="button">Play Again</button>
+      </div>
+    </div>
+  </div>
   <script src="./firebase-config.js"></script>
-  <script src="./home.js?v=20260421-1200"></script>
+  <script src="./home.js?v=20260421-1305"></script>
 </body>
 </html>

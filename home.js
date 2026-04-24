@@ -3,6 +3,14 @@ const homeSongLineEl = document.getElementById("home-song-line");
 const homeVisitCountEl = document.getElementById("home-visit-count");
 const homeVisitTodayCountEl = document.getElementById("home-visit-today-count");
 const homeVisitNoteEl = document.getElementById("home-visit-note");
+const openAiCinemaBtn = document.getElementById("open-ai-cinema");
+const openAiCinemaCardBtn = document.getElementById("open-ai-cinema-card");
+const closeAiCinemaBtn = document.getElementById("close-ai-cinema");
+const playAiCinemaBtn = document.getElementById("play-ai-cinema");
+const aiCinemaModalEl = document.getElementById("ai-cinema-modal");
+const aiCinemaKickerEl = document.getElementById("ai-cinema-kicker");
+const aiCinemaTitleEl = document.getElementById("ai-cinema-title");
+const aiCinemaCopyEl = document.getElementById("ai-cinema-copy");
 
 const introSongLines = [
   "So just draw me",
@@ -33,11 +41,35 @@ const noteFrequencies = {
 let introSongStarted = false;
 let introSongActive = false;
 let audioContext = null;
+let aiCinemaTimer = null;
+let aiCinemaSceneTimers = [];
 const HOME_VISIT_STORAGE_KEY = "bear-home-visit-counted";
 const HOME_VISIT_TODAY_STORAGE_KEY = "bear-home-visit-today";
 const HOME_OWNER_EXCLUDED_KEY = "bear-home-owner-excluded";
 const HOME_VISIT_PATH = "siteStats/homeVisits";
 const OWNER_STORAGE_KEY = "color-current-owner-access";
+const aiCinemaScenes = [
+  {
+    kicker: "Scene 1 of 4",
+    title: "WELCOME TO THE FUTURE",
+    copy: "A shiny robot has detected 9000 percent friendship energy."
+  },
+  {
+    kicker: "Scene 2 of 4",
+    title: "LASERS OF KINDNESS",
+    copy: "Neon feelings are now loading directly into the cloud."
+  },
+  {
+    kicker: "Scene 3 of 4",
+    title: "BRAIN POWER MAXIMUM",
+    copy: "This video was obviously made by a machine that loves gradients way too much."
+  },
+  {
+    kicker: "Final Scene",
+    title: "TOGETHER WE ARE EPIC",
+    copy: "Mission complete. Corniness level: impossible."
+  }
+];
 
 function setHomeSongLine(line) {
   if (!homeSongLineEl) {
@@ -67,6 +99,74 @@ function setVisitCounterState(totalLabel, todayLabel, noteLabel) {
   if (homeVisitNoteEl) {
     homeVisitNoteEl.textContent = noteLabel;
   }
+}
+
+function setAiCinemaScene(scene) {
+  if (aiCinemaKickerEl) {
+    aiCinemaKickerEl.textContent = scene.kicker;
+  }
+  if (aiCinemaTitleEl) {
+    aiCinemaTitleEl.textContent = scene.title;
+  }
+  if (aiCinemaCopyEl) {
+    aiCinemaCopyEl.textContent = scene.copy;
+  }
+}
+
+function stopAiCinemaLoop() {
+  aiCinemaSceneTimers.forEach((timer) => window.clearTimeout(timer));
+  aiCinemaSceneTimers = [];
+  if (aiCinemaTimer) {
+    window.clearTimeout(aiCinemaTimer);
+    aiCinemaTimer = null;
+  }
+}
+
+function playAiCinemaSequence() {
+  stopAiCinemaLoop();
+  const context = getAudioContext();
+  if (context && context.state === "suspended") {
+    context.resume();
+  }
+
+  aiCinemaScenes.forEach((scene, index) => {
+    const sceneTimer = window.setTimeout(() => {
+      setAiCinemaScene(scene);
+      if (context) {
+        playLovelyChord(
+          index % 2 === 0 ? ["C5", "E5", "G5", "C6"] : ["B4", "D5", "G5", "A5"],
+          context.currentTime + 0.02
+        );
+      }
+    }, index * 1650);
+    aiCinemaSceneTimers.push(sceneTimer);
+  });
+
+  aiCinemaTimer = window.setTimeout(() => {
+    setAiCinemaScene(aiCinemaScenes[0]);
+  }, aiCinemaScenes.length * 1650 + 400);
+}
+
+function openAiCinema() {
+  if (!aiCinemaModalEl) {
+    return;
+  }
+
+  aiCinemaModalEl.classList.remove("is-hidden");
+  aiCinemaModalEl.setAttribute("aria-hidden", "false");
+  document.body.classList.add("is-loading");
+  playAiCinemaSequence();
+}
+
+function closeAiCinema() {
+  if (!aiCinemaModalEl) {
+    return;
+  }
+
+  aiCinemaModalEl.classList.add("is-hidden");
+  aiCinemaModalEl.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("is-loading");
+  stopAiCinemaLoop();
 }
 
 function getTodayKey() {
@@ -245,6 +345,22 @@ function tryAutoplayIntroSong() {
 if (playIntroSongBtn) {
   playIntroSongBtn.addEventListener("click", playIntroSong);
 }
+
+openAiCinemaBtn?.addEventListener("click", openAiCinema);
+openAiCinemaCardBtn?.addEventListener("click", openAiCinema);
+closeAiCinemaBtn?.addEventListener("click", closeAiCinema);
+playAiCinemaBtn?.addEventListener("click", playAiCinemaSequence);
+aiCinemaModalEl?.addEventListener("click", (event) => {
+  if (event.target === aiCinemaModalEl) {
+    closeAiCinema();
+  }
+});
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && aiCinemaModalEl && !aiCinemaModalEl.classList.contains("is-hidden")) {
+    closeAiCinema();
+  }
+});
 
 window.addEventListener("pointerdown", tryAutoplayIntroSong, { once: true });
 window.addEventListener("keydown", tryAutoplayIntroSong, { once: true });
